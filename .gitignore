@@ -54,3 +54,4 @@ dkms.conf
 #stm32cubeide
 .*
 !/.gitignore
+Debug

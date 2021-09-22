@@ -21,6 +21,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "adc.h"
+#include "dma.h"
 #include "i2c.h"
 #include "quadspi.h"
 #include "spi.h"
@@ -31,8 +32,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "lv_conf.h"
-#include "lvgl.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,7 +106,17 @@ int main(void)
   MX_TIM1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_DMA_Init();
   /* USER CODE BEGIN 2 */
+
+  /*Gui initialization*/
+  lv_init();
+
+  /*Lcd st7789 driver initialization*/
+  lv_port_disp_init();
+
+  /* encoder and buttons initialization */
+  lv_port_indev_init();
 
   /* USER CODE END 2 */
 
