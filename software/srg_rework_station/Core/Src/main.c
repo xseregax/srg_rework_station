@@ -27,7 +27,7 @@
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_device.h"
+#include "usb_otg.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -107,12 +107,13 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_DMA_Init();
+  MX_USB_OTG_HS_PCD_Init();
   /* USER CODE BEGIN 2 */
 
   /*Gui initialization*/
   lv_init();
 
-  /*Lcd st7789 driver initialization*/
+  /*Lcd st7789vw driver initialization*/
   lv_port_disp_init();
 
   /* encoder and buttons initialization */

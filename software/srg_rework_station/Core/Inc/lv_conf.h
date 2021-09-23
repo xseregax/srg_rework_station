@@ -33,7 +33,7 @@
  *=========================*/
 
 /*1: use custom malloc/free, 0: use the built-in `lv_mem_alloc()` and `lv_mem_free()`*/
-#define LV_MEM_CUSTOM      0
+#define LV_MEM_CUSTOM      1
 #if LV_MEM_CUSTOM == 0
 /*Size of the memory available for `lv_mem_alloc()` in bytes (>= 2kB)*/
 #  define LV_MEM_SIZE    (32U * 1024U)          /*[bytes]*/
@@ -48,7 +48,7 @@
 #endif     /*LV_MEM_CUSTOM*/
 
 /*Use the standard `memcpy` and `memset` instead of LVGL's own functions. (Might or might not be faster).*/
-#define LV_MEMCPY_MEMSET_STD    0
+#define LV_MEMCPY_MEMSET_STD    1
 
 /*====================
    HAL SETTINGS
@@ -109,7 +109,7 @@
 #if LV_USE_GPU_STM32_DMA2D
 /*Must be defined to include path of CMSIS header of target processor
 e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
-#define LV_GPU_DMA2D_CMSIS_INCLUDE
+#define LV_GPU_DMA2D_CMSIS_INCLUDE "stm32f722xx.h"
 #endif
 
 /*Use NXP's PXP GPU iMX RTxxx platforms*/
@@ -199,7 +199,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #  define LV_SPRINTF_USE_FLOAT 0
 #endif  /*LV_SPRINTF_CUSTOM*/
 
-#define LV_USE_USER_DATA      1
+#define LV_USE_USER_DATA      0
 
 /*Garbage Collector settings
  *Used if lvgl is binded to higher level language and the memory is managed by that language*/
@@ -463,7 +463,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
  * Themes
  *----------*/
 /*A simple, impressive and very complete theme*/
-#define LV_USE_THEME_DEFAULT    1
+#define LV_USE_THEME_DEFAULT    0
 #if LV_USE_THEME_DEFAULT
 
 /*0: Light mode; 1: Dark mode*/
@@ -477,10 +477,10 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #endif /*LV_USE_THEME_DEFAULT*/
 
 /*An very simple them that is a good starting point for a custom theme*/
- #define LV_USE_THEME_BASIC    1
+ #define LV_USE_THEME_BASIC    0
 
 /*A theme designed for monochrome displays*/
-#define LV_USE_THEME_MONO       1
+#define LV_USE_THEME_MONO       0
 
 /*-----------
  * Layouts

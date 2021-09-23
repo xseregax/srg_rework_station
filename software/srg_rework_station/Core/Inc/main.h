@@ -33,7 +33,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lvgl.h"
-#include "st7789.h"
+#include "ST7789VW.h"
 #include "enc_buttons.h"
 
 /* USER CODE END Includes */
