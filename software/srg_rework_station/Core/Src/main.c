@@ -21,13 +21,15 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "adc.h"
+#include "crc.h"
 #include "dma.h"
 #include "i2c.h"
 #include "quadspi.h"
+#include "rng.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_otg.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -107,9 +109,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_DMA_Init();
-  MX_USB_OTG_HS_PCD_Init();
+  MX_CRC_Init();
+  MX_RNG_Init();
   /* USER CODE BEGIN 2 */
-
+//HAL_ADC_ConvCpltCallback
   /*Gui initialization*/
   lv_init();
 

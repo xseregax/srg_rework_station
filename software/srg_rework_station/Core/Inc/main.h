@@ -35,6 +35,7 @@ extern "C" {
 #include "lvgl.h"
 #include "ST7789VW.h"
 #include "enc_buttons.h"
+#include "station.h"
 
 /* USER CODE END Includes */
 
@@ -89,8 +90,6 @@ void Error_Handler(void);
 #define AC_VOLTAGE_GPIO_Port GPIOA
 #define ARCMID_Pin GPIO_PIN_7
 #define ARCMID_GPIO_Port GPIOA
-#define FAN_VOLTAGE_Pin GPIO_PIN_4
-#define FAN_VOLTAGE_GPIO_Port GPIOC
 #define FAN_TACHO_Pin GPIO_PIN_0
 #define FAN_TACHO_GPIO_Port GPIOB
 #define FAN_PWM_Pin GPIO_PIN_1
@@ -133,8 +132,10 @@ void Error_Handler(void);
 #define LCD_DC_GPIO_Port GPIOC
 #define LCD_CS_Pin GPIO_PIN_2
 #define LCD_CS_GPIO_Port GPIOD
-#define LCD_CLK_Pin GPIO_PIN_3
-#define LCD_CLK_GPIO_Port GPIOB
+#define LCD_SCK_Pin GPIO_PIN_3
+#define LCD_SCK_GPIO_Port GPIOB
+#define LCD_MISO_Pin GPIO_PIN_4
+#define LCD_MISO_GPIO_Port GPIOB
 #define LCD_MOSI_Pin GPIO_PIN_5
 #define LCD_MOSI_GPIO_Port GPIOB
 #define FLASH_CS_Pin GPIO_PIN_6

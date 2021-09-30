@@ -30,3 +30,7 @@ https://github.com/foldvarid93/JBC_SolderingStation
 http://www.leoniv.diod.club/projects/power/dxs-90/dxs-90.html
 
 https://www.radiokot.ru/forum/viewtopic.php?f=2&t=152532
+
+https://github.com/Ralim/IronOS
+
+https://github.com/deividAlfa/stm32_soldering_iron_controller

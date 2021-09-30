@@ -10,16 +10,13 @@
 extern "C" {
 #endif
 
-/*********************
- *      INCLUDES
- *********************/
+
 #include "main.h"
+#include "spi.h"
 
-/*********************
- *      DEFINES
- *********************/
-
-/*  ST7789VW 4-line serial interface Ⅰ
+/*
+ST7789VW 2.0"
+4-line serial interface Ⅰ
 16bit (RGB565)
 CSX Chip selection signal
 WRX
@@ -30,11 +27,11 @@ SDA Serial input/output data
 
 320*240*16bit = 153 600 bytes
 
- */
+*/
 
 
-#define TFT_HOR_RES     320
-#define TFT_VER_RES     240
+#define TFT_HOR_RES 320
+#define TFT_VER_RES 240
 #define ST7789VW_ROTATION 2 //Normal
 
 #define ST7789VW_BUFFER TFT_HOR_RES*TFT_VER_RES/3 //pixel count, buffer split to 3 parts or TFT_HOR_RES*10 rows
@@ -44,9 +41,8 @@ SDA Serial input/output data
  *      TYPEDEFS
  **********************/
 
-/* choose a Hardware SPI port to use. */
+/* SPI1 */
 #define ST7789VW_SPI_PORT hspi1
-extern SPI_HandleTypeDef ST7789VW_SPI_PORT;
 
 /* Pin connection*/
 #define ST7789VW_RST_PORT LCD_RESET_GPIO_Port
@@ -55,17 +51,9 @@ extern SPI_HandleTypeDef ST7789VW_SPI_PORT;
 #define ST7789VW_DC_PIN   LCD_DC_Pin
 #define ST7789VW_CS_PORT  LCD_CS_GPIO_Port
 #define ST7789VW_CS_PIN   LCD_CS_Pin
+#define ST7789VW_LED_PORT LCD_PWM_GPIO_Port
+#define ST7789VW_LED_PIN  LCD_PWM_Pin
 
-/***** Use if need backlight control *****/
-//#define BLK_PORT LCD_PWM_GPIO_Port
-//#define BLK_PIN  LCD_PWM_Pin
-
-
-//#define LCD_BUF_DMA_STREAM               DMA2_Stream3
-//#define LCD_BUF_DMA_CHANNEL              DMA_CHANNEL_0
-//#define LCD_BUF_DMA_STREAM_IRQ           DMA2_Stream3_IRQn
-//#define LCD_BUF_DMA_STREAM_IRQHANDLER    DMA2_Stream3_IRQHandler
-//
 
 //ST7789VW System Function Command
 #define ST7789VW_CMD_NOP        0x00 //No operation
@@ -181,22 +169,22 @@ extern SPI_HandleTypeDef ST7789VW_SPI_PORT;
 
 
 /* Basic operations */
-#define ST7789VW_RST_Clr() HAL_GPIO_WritePin( ST7789VW_RST_PORT,  ST7789VW_RST_PIN, GPIO_PIN_RESET)
-#define ST7789VW_RST_Set() HAL_GPIO_WritePin( ST7789VW_RST_PORT,  ST7789VW_RST_PIN, GPIO_PIN_SET)
+#define ST7789VW_RST_Clr() HAL_GPIO_WritePin(ST7789VW_RST_PORT, ST7789VW_RST_PIN, GPIO_PIN_RESET)
+#define ST7789VW_RST_Set() HAL_GPIO_WritePin(ST7789VW_RST_PORT, ST7789VW_RST_PIN, GPIO_PIN_SET)
 
-#define ST7789VW_DC_Clr() HAL_GPIO_WritePin( ST7789VW_DC_PORT,  ST7789VW_DC_PIN, GPIO_PIN_RESET)
-#define ST7789VW_DC_Set() HAL_GPIO_WritePin( ST7789VW_DC_PORT,  ST7789VW_DC_PIN, GPIO_PIN_SET)
+#define ST7789VW_DC_Clr() HAL_GPIO_WritePin(ST7789VW_DC_PORT, ST7789VW_DC_PIN, GPIO_PIN_RESET)
+#define ST7789VW_DC_Set() HAL_GPIO_WritePin(ST7789VW_DC_PORT, ST7789VW_DC_PIN, GPIO_PIN_SET)
 
-#define ST7789VW_Select() HAL_GPIO_WritePin( ST7789VW_CS_PORT,  ST7789VW_CS_PIN, GPIO_PIN_RESET)
-#define ST7789VW_UnSelect() HAL_GPIO_WritePin( ST7789VW_CS_PORT,  ST7789VW_CS_PIN, GPIO_PIN_SET)
+#define ST7789VW_Select() HAL_GPIO_WritePin(ST7789VW_CS_PORT, ST7789VW_CS_PIN, GPIO_PIN_RESET)
+#define ST7789VW_UnSelect() HAL_GPIO_WritePin(ST7789VW_CS_PORT, ST7789VW_CS_PIN, GPIO_PIN_SET)
 
 
 /******************************************/
-/**********************
- * GLOBAL PROTOTYPES
- **********************/
+
 void lv_port_disp_init(void);
 void lv_port_disp_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t * color_p);
+
+void lv_port_disp_give_ISR(void);
 
 /* Basic functions. */
 void ST7789VW_Init(void);
@@ -204,14 +192,8 @@ void ST7789VW_SetRotation(uint8_t m);
 void ST7789VW_WriteCommand(uint8_t cmd);
 void ST7789VW_WriteData(uint8_t *buff, size_t buff_size);
 void ST7789VW_WriteByteData(uint8_t data);
-void ST7789VW_SetAddressWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-void ST7789VW_InvertColors(uint8_t invert);
-void ST7789VW_TearEffect(uint8_t tear);
 
 
-/**********************
- *      MACROS
- **********************/
 #ifdef __cplusplus
 }
 #endif

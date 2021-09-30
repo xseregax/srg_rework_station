@@ -62,10 +62,10 @@ const osThreadAttr_t myTaskLvgl_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for myBinarySemLvgl */
-osSemaphoreId_t myBinarySemLvglHandle;
-const osSemaphoreAttr_t myBinarySemLvgl_attributes = {
-  .name = "myBinarySemLvgl"
+/* Definitions for myMutexLCD */
+osMutexId_t myMutexLCDHandle;
+const osMutexAttr_t myMutexLCD_attributes = {
+  .name = "myMutexLCD"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,6 +76,7 @@ const osSemaphoreAttr_t myBinarySemLvgl_attributes = {
 void StartDefaultTask(void *argument);
 void StartTaskLvgl(void *argument);
 
+extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* Hook prototypes */
@@ -103,14 +104,13 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
+  /* Create the mutex(es) */
+  /* creation of myMutexLCD */
+  myMutexLCDHandle = osMutexNew(&myMutexLCD_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
-
-  /* Create the semaphores(s) */
-  /* creation of myBinarySemLvgl */
-  myBinarySemLvglHandle = osSemaphoreNew(1, 1, &myBinarySemLvgl_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -150,6 +150,8 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   for(;;)

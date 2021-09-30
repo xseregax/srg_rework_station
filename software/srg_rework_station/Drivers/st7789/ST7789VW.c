@@ -3,93 +3,57 @@
  *
  */
 
-/*********************
- *      INCLUDES
- *********************/
 #include "ST7789VW.h"
+#include "FreeRTOS.h"
+#include "cmsis_os.h"
+#include "semphr.h"
 
-/*********************
- *      DEFINES
- *********************/
-
-/**********************
- *      TYPEDEFS
- **********************/
-
-/**********************
- *  STATIC PROTOTYPES
- **********************/
+extern osMutexId_t myMutexLCDHandle;
 
 
-/**********************
- *  STATIC VARIABLES
- **********************/
 
-/**********************
- *      MACROS
- **********************/
-
-/**********************
- *   GLOBAL FUNCTIONS
- **********************/
-
+//init display and register in lvgl
 void lv_port_disp_init(void)
 {
-  /*-------------------------
-   * Initialize your display
-   * -----------------------*/
-   ST7789VW_Init();
+  ST7789VW_Init(); //Initialize ST7789VW display
 
-  /*-----------------------------
-   * Create a buffer for drawing
-   *----------------------------*/
-  static lv_disp_draw_buf_t draw_buf_dsc;
+  static lv_disp_draw_buf_t draw_buf_dsc; //Create a buffer for drawing
   static lv_color_t buf_1[ ST7789VW_BUFFER];
 
 #if  ST7789VW_BUFFER_COUNT == 1
-  lv_disp_draw_buf_init(&draw_buf_dsc, buf_1, NULL,  ST7789VW_BUFFER);   /*Initialize the display buffer*/
+  lv_disp_draw_buf_init(&draw_buf_dsc, buf_1, NULL,  ST7789VW_BUFFER);   /*Initialize display buffer*/
 #else
   static lv_color_t buf_2[ ST7789VW_BUFFER];
-  lv_disp_draw_buf_init(&draw_buf_dsc, buf_1, buf_2,  ST7789VW_BUFFER);   /*Initialize the display buffer*/
+  lv_disp_draw_buf_init(&draw_buf_dsc, buf_1, buf_2,  ST7789VW_BUFFER);   /*Initialize two display buffers*/
 #endif
 
-  /*-----------------------------------
-   * Register the display in LVGL
-   *----------------------------------*/
-  static lv_disp_drv_t disp_drv;                  /*Descriptor of a display driver*/
-  lv_disp_drv_init(&disp_drv);                    /*Basic initialization*/
+  static lv_disp_drv_t disp_drv; //Register the display in LVGL
+  lv_disp_drv_init(&disp_drv);
 
-  /*Set the resolution of the display*/
+  //Set the resolution of the display
   disp_drv.hor_res = TFT_HOR_RES;
   disp_drv.ver_res = TFT_VER_RES;
 
-  /*Used to copy the buffer's content to the display*/
+  disp_drv.draw_buf = &draw_buf_dsc;
   disp_drv.flush_cb = lv_port_disp_flush;
 
-  /*Set a display buffer*/
-  disp_drv.draw_buf = &draw_buf_dsc;
-
-  /*Finally register the driver*/
   lv_disp_drv_register(&disp_drv);
 }
 
-/*Flush the content of the internal buffer the specific area on the display
- *You can use DMA or any hardware acceleration to do this operation in the background but
- *'lv_disp_flush_ready()' has to be called when finished.*/
+//transmit display buffer to st7789vw
 void lv_port_disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
 {
-  uint32_t w = (area->x2 - area->x1 + 1);
-  uint32_t h = (area->y2 - area->y1 + 1);
+  xSemaphoreTake(myMutexLCDHandle, portMAX_DELAY);
 
   ST7789VW_Select();
 
-  ST7789VW_WriteCommand( ST7789VW_CMD_CASET); //Column Address set
+  ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
   {
     uint8_t data[] = {area->x1 >> 8, area->x1 & 0xFF, area->x2 >> 8, area->x2 & 0xFF};
     ST7789VW_WriteData(data, sizeof(data));
   }
 
-  ST7789VW_WriteCommand( ST7789VW_CMD_RASET); //Row Address set
+  ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
   {
     uint8_t data[] = {area->y1 >> 8, area->y1 & 0xFF, area->y2 >> 8, area->y2 & 0xFF};
     ST7789VW_WriteData(data, sizeof(data));
@@ -97,23 +61,34 @@ void lv_port_disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_col
 
   ST7789VW_WriteCommand(ST7789VW_CMD_RAMWR); //Write to RAM
 
-  HAL_SPI_Transmit_DMA(&ST7789VW_SPI_PORT, (unsigned char*)color_p, w * h * 2);
-  while(HAL_SPI_GetState(&ST7789VW_SPI_PORT) != HAL_SPI_STATE_READY)
-  {
-    //empty loop
-  }
+  uint16_t w = (area->x2 - area->x1 + 1);
+  uint16_t h = (area->y2 - area->y1 + 1);
 
-   ST7789VW_UnSelect();
+  HAL_SPI_Transmit_DMA(&ST7789VW_SPI_PORT, (uint8_t *)color_p, w * h * 2);
 
+  xSemaphoreTake(myMutexLCDHandle, portMAX_DELAY);
+
+  ST7789VW_UnSelect();
 
   /*IMPORTANT!!!
    *Inform the graphics library that you are ready with the flushing*/
-  lv_disp_flush_ready(disp_drv);
+  lv_disp_flush_ready(&disp_drv);
+
+  xSemaphoreGive(myMutexLCDHandle);
 }
 
+void lv_port_disp_give_ISR(void)
+{
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  xSemaphoreGiveFromISR(myMutexLCDHandle, &xHigherPriorityTaskWoken);
+
+  if(xHigherPriorityTaskWoken != pdFALSE) {
+    taskYIELD();
+  }
+}
 
 /*Initialize your display and the required peripherals.*/
-void  ST7789VW_Init(void)
+void ST7789VW_Init(void)
 {
   HAL_Delay(25);
 
@@ -195,7 +170,7 @@ void  ST7789VW_Init(void)
 void ST7789VW_WriteCommand(uint8_t cmd)
 {
    ST7789VW_DC_Clr(); //Set command mode
-   HAL_SPI_Transmit(& ST7789VW_SPI_PORT, &cmd, sizeof(cmd), HAL_MAX_DELAY);
+   HAL_SPI_Transmit(&ST7789VW_SPI_PORT, &cmd, sizeof(cmd), HAL_MAX_DELAY);
    ST7789VW_DC_Set(); //Restore data mode
 }
 
@@ -211,7 +186,7 @@ void ST7789VW_WriteData(uint8_t *buff, size_t buff_size)
 
   while (buff_size > 0) {
       uint16_t chunk_size = buff_size > 65535 ? 65535 : buff_size;
-      HAL_SPI_Transmit(& ST7789VW_SPI_PORT, buff, chunk_size, HAL_MAX_DELAY);
+      HAL_SPI_Transmit(&ST7789VW_SPI_PORT, buff, chunk_size, HAL_MAX_DELAY);
       buff += chunk_size;
       buff_size -= chunk_size;
   }
@@ -224,7 +199,7 @@ void ST7789VW_WriteData(uint8_t *buff, size_t buff_size)
  */
 void ST7789VW_WriteByteData(uint8_t data)
 {
-  HAL_SPI_Transmit(& ST7789VW_SPI_PORT, &data, sizeof(data), HAL_MAX_DELAY);
+  HAL_SPI_Transmit(&ST7789VW_SPI_PORT, &data, sizeof(data), HAL_MAX_DELAY);
 }
 
 /**

@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    usb_otg.h
+  * @file    crc.h
   * @brief   This file contains all the function prototypes for
-  *          the usb_otg.c file
+  *          the crc.c file
   ******************************************************************************
   * @attention
   *
@@ -17,8 +17,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USB_OTG_H__
-#define __USB_OTG_H__
+#ifndef __CRC_H__
+#define __CRC_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,13 +31,13 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-extern PCD_HandleTypeDef hpcd_USB_OTG_HS;
+extern CRC_HandleTypeDef hcrc;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_USB_OTG_HS_PCD_Init(void);
+void MX_CRC_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -47,6 +47,6 @@ void MX_USB_OTG_HS_PCD_Init(void);
 }
 #endif
 
-#endif /* __USB_OTG_H__ */
+#endif /* __CRC_H__ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
