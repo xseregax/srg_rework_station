@@ -8,7 +8,7 @@
 #include "cmsis_os.h"
 #include "semphr.h"
 
-extern osMutexId_t myMutexLCDHandle;
+extern osMutexId_t myMutexLcdHandle;
 
 
 
@@ -43,7 +43,7 @@ void lv_port_disp_init(void)
 //transmit display buffer to st7789vw
 void lv_port_disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
 {
-  xSemaphoreTake(myMutexLCDHandle, portMAX_DELAY);
+  xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
 
   ST7789VW_Select();
 
@@ -66,30 +66,30 @@ void lv_port_disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_col
 
   HAL_SPI_Transmit_DMA(&ST7789VW_SPI_PORT, (uint8_t *)color_p, w * h * 2);
 
-  xSemaphoreTake(myMutexLCDHandle, portMAX_DELAY);
+  xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
 
   ST7789VW_UnSelect();
 
   /*IMPORTANT!!!
    *Inform the graphics library that you are ready with the flushing*/
-  lv_disp_flush_ready(&disp_drv);
+  lv_disp_flush_ready(disp_drv);
 
-  xSemaphoreGive(myMutexLCDHandle);
+  xSemaphoreGive(myMutexLcdHandle);
 }
 
 void lv_port_disp_give_ISR(void)
 {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  xSemaphoreGiveFromISR(myMutexLCDHandle, &xHigherPriorityTaskWoken);
+  xSemaphoreGiveFromISR(myMutexLcdHandle, &xHigherPriorityTaskWoken);
 
-  if(xHigherPriorityTaskWoken != pdFALSE) {
-    taskYIELD();
-  }
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 /*Initialize your display and the required peripherals.*/
 void ST7789VW_Init(void)
 {
+  xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
+
   HAL_Delay(25);
 
   ST7789VW_RST_Clr(); //Reset chip
@@ -159,6 +159,8 @@ void ST7789VW_Init(void)
   ST7789VW_WriteCommand(ST7789VW_CMD_DISPON); //Main screen turned on
 
   ST7789VW_UnSelect();
+
+  xSemaphoreGive(myMutexLcdHandle);
 }
 
 

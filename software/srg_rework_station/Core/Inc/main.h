@@ -90,6 +90,8 @@ void Error_Handler(void);
 #define AC_VOLTAGE_GPIO_Port GPIOA
 #define ARCMID_Pin GPIO_PIN_7
 #define ARCMID_GPIO_Port GPIOA
+#define FAN_VOLTAGE_Pin GPIO_PIN_4
+#define FAN_VOLTAGE_GPIO_Port GPIOC
 #define FAN_TACHO_Pin GPIO_PIN_0
 #define FAN_TACHO_GPIO_Port GPIOB
 #define FAN_PWM_Pin GPIO_PIN_1

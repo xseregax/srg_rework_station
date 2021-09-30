@@ -62,10 +62,43 @@ const osThreadAttr_t myTaskLvgl_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for myMutexLCD */
-osMutexId_t myMutexLCDHandle;
-const osMutexAttr_t myMutexLCD_attributes = {
-  .name = "myMutexLCD"
+/* Definitions for myTaskInputs */
+osThreadId_t myTaskInputsHandle;
+const osThreadAttr_t myTaskInputs_attributes = {
+  .name = "myTaskInputs",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for myTaskEncoder */
+osThreadId_t myTaskEncoderHandle;
+const osThreadAttr_t myTaskEncoder_attributes = {
+  .name = "myTaskEncoder",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for myTaskZcd */
+osThreadId_t myTaskZcdHandle;
+const osThreadAttr_t myTaskZcd_attributes = {
+  .name = "myTaskZcd",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for myTaskUart */
+osThreadId_t myTaskUartHandle;
+const osThreadAttr_t myTaskUart_attributes = {
+  .name = "myTaskUart",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for myMutexLcd */
+osMutexId_t myMutexLcdHandle;
+const osMutexAttr_t myMutexLcd_attributes = {
+  .name = "myMutexLcd"
+};
+/* Definitions for myMutexI2cInputs */
+osMutexId_t myMutexI2cInputsHandle;
+const osMutexAttr_t myMutexI2cInputs_attributes = {
+  .name = "myMutexI2cInputs"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,6 +108,10 @@ const osMutexAttr_t myMutexLCD_attributes = {
 
 void StartDefaultTask(void *argument);
 void StartTaskLvgl(void *argument);
+void StartTaskInputs(void *argument);
+void StartTaskEncoder(void *argument);
+void StartTaskZcd(void *argument);
+void StartTaskUart(void *argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -105,8 +142,11 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE END Init */
   /* Create the mutex(es) */
-  /* creation of myMutexLCD */
-  myMutexLCDHandle = osMutexNew(&myMutexLCD_attributes);
+  /* creation of myMutexLcd */
+  myMutexLcdHandle = osMutexNew(&myMutexLcd_attributes);
+
+  /* creation of myMutexI2cInputs */
+  myMutexI2cInputsHandle = osMutexNew(&myMutexI2cInputs_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -130,6 +170,18 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of myTaskLvgl */
   myTaskLvglHandle = osThreadNew(StartTaskLvgl, NULL, &myTaskLvgl_attributes);
+
+  /* creation of myTaskInputs */
+  myTaskInputsHandle = osThreadNew(StartTaskInputs, NULL, &myTaskInputs_attributes);
+
+  /* creation of myTaskEncoder */
+  myTaskEncoderHandle = osThreadNew(StartTaskEncoder, NULL, &myTaskEncoder_attributes);
+
+  /* creation of myTaskZcd */
+  myTaskZcdHandle = osThreadNew(StartTaskZcd, NULL, &myTaskZcd_attributes);
+
+  /* creation of myTaskUart */
+  myTaskUartHandle = osThreadNew(StartTaskUart, NULL, &myTaskUart_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -179,6 +231,79 @@ void StartTaskLvgl(void *argument)
     osDelay(5);
   }
   /* USER CODE END StartTaskLvgl */
+}
+
+/* USER CODE BEGIN Header_StartTaskInputs */
+/**
+* @brief Function implementing the myTaskInputs thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskInputs */
+void StartTaskInputs(void *argument)
+{
+  /* USER CODE BEGIN StartTaskInputs */
+  /* Infinite loop */
+  for(;;)
+  {
+    uint32_t ulNotifiedValue = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+    osDelay(1);
+  }
+  /* USER CODE END StartTaskInputs */
+}
+
+/* USER CODE BEGIN Header_StartTaskEncoder */
+/**
+* @brief Function implementing the myTaskEncoder thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskEncoder */
+void StartTaskEncoder(void *argument)
+{
+  /* USER CODE BEGIN StartTaskEncoder */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartTaskEncoder */
+}
+
+/* USER CODE BEGIN Header_StartTaskZcd */
+/**
+* @brief Function implementing the myTaskZcd thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskZcd */
+void StartTaskZcd(void *argument)
+{
+  /* USER CODE BEGIN StartTaskZcd */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartTaskZcd */
+}
+
+/* USER CODE BEGIN Header_StartTaskUart */
+/**
+* @brief Function implementing the myTaskUart thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskUart */
+void StartTaskUart(void *argument)
+{
+  /* USER CODE BEGIN StartTaskUart */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartTaskUart */
 }
 
 /* Private application code --------------------------------------------------*/

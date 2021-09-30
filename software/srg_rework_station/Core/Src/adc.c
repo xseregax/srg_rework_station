@@ -172,7 +172,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     PC4     ------> ADC1_IN14
     */
     GPIO_InitStruct.Pin = IRON1_TEMP_Pin|IRON2_TEMP_Pin|IRON1_CURR_Pin|IRON2_CURR_Pin
-                          |GPIO_PIN_4;
+                          |FAN_VOLTAGE_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -235,7 +235,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     PC4     ------> ADC1_IN14
     */
     HAL_GPIO_DeInit(GPIOC, IRON1_TEMP_Pin|IRON2_TEMP_Pin|IRON1_CURR_Pin|IRON2_CURR_Pin
-                          |GPIO_PIN_4);
+                          |FAN_VOLTAGE_Pin);
 
     HAL_GPIO_DeInit(GPIOA, AIR_TEMP_Pin|DC_VOLTAGE_Pin|AC_CURRENT_Pin|AC_VOLTAGE_Pin
                           |ARCMID_Pin);
