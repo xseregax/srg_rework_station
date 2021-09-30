@@ -186,15 +186,7 @@ SDA Serial input/output data
 
 void lv_port_disp_init(void);
 void lv_port_disp_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t * color_p);
-
 void lv_port_disp_give_ISR(void);
-
-// Basic functions
-void ST7789VW_Init(void);
-void ST7789VW_SetRotation(uint8_t m);
-void ST7789VW_WriteCommand(uint8_t cmd);
-void ST7789VW_WriteData(uint8_t *buff, size_t buff_size);
-void ST7789VW_WriteByteData(uint8_t data);
 
 
 #ifdef __cplusplus

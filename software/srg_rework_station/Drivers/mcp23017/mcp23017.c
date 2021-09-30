@@ -1,7 +1,18 @@
 #include "mcp23017.h"
+#include "FreeRTOS.h"
+#include "cmsis_os.h"
+#include "semphr.h"
+
+extern osMutexId_t myMutexI2cInputsHandle;
+
+HAL_StatusTypeDef mcp23017_read(uint16_t reg, uint8_t *data);
+HAL_StatusTypeDef mcp23017_write(uint16_t reg, uint8_t data);
+
 
 HAL_StatusTypeDef mcp23017_init(void)
 {
+  xSemaphoreTake(myMutexI2cInputsHandle, portMAX_DELAY);
+
   // IntA - Active-low
   mcp23017_write(MCP23017_REG_IOCON,
       MCP23017_BIT_IOCON_SEQOP // Sequential operation disabled
@@ -19,6 +30,8 @@ HAL_StatusTypeDef mcp23017_init(void)
   mcp23017_write(MCP23017_REG_GPIOB,
       MCP23017_PORT_IO0 // pin 0 high, other low
   ); // PORTB
+
+  xSemaphoreGive(myMutexI2cInputsHandle);
 
   return HAL_OK;
 }

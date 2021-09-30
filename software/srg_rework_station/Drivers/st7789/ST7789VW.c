@@ -10,6 +10,12 @@
 
 extern osMutexId_t myMutexLcdHandle;
 
+// Basic functions
+void ST7789VW_Init(void);
+void ST7789VW_SetRotation(uint8_t m);
+void ST7789VW_WriteCommand(uint8_t cmd);
+void ST7789VW_WriteData(uint8_t *buff, size_t buff_size);
+void ST7789VW_WriteByteData(uint8_t data);
 
 
 //init display and register in lvgl

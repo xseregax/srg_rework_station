@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lvgl.h"
+#include "mcp23017.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -243,6 +244,10 @@ void StartTaskLvgl(void *argument)
 void StartTaskInputs(void *argument)
 {
   /* USER CODE BEGIN StartTaskInputs */
+
+  // init mcp23017 extender ports
+  mcp23017_init();
+
   /* Infinite loop */
   for(;;)
   {

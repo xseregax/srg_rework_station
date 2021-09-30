@@ -8,7 +8,7 @@ extern "C" {
 
 #include "stm32f7xx_hal.h"
 #include "i2c.h"
-
+#include "main.h"
 // I2C
 #define MCP23017_I2C_PORT &hi2c2
 // I2C address
@@ -190,8 +190,6 @@ are enabled (GPINTEN) <7:0>.
 
 
 HAL_StatusTypeDef mcp23017_init(void);
-HAL_StatusTypeDef mcp23017_read(uint16_t reg, uint8_t *data);
-HAL_StatusTypeDef mcp23017_write(uint16_t reg, uint8_t data);
 
 
 #ifdef __cplusplus
