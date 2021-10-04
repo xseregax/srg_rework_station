@@ -35,6 +35,7 @@ extern "C" {
 #include "lvgl.h"
 #include "ST7789VW.h"
 #include "enc_buttons.h"
+#include "mcp23017.h"
 #include "station.h"
 
 /* USER CODE END Includes */

@@ -43,16 +43,23 @@ void lv_port_disp_init(void)
   disp_drv.draw_buf = &draw_buf_dsc;
   disp_drv.flush_cb = lv_port_disp_flush;
 
-  lv_disp_drv_register(&disp_drv);
+  lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
+  lv_disp_set_default(disp);
 }
 
 //transmit display buffer to st7789vw
 void lv_port_disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
 {
+  if(area->x2 < 0) return;
+  if(area->y2 < 0) return;
+  if(area->x1 > TFT_HOR_RES - 1) return;
+  if(area->y1 > TFT_VER_RES - 1) return;
+
   xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
 
   ST7789VW_Select();
 
+  /*
   ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
   {
     uint8_t data[] = {area->x1 >> 8, area->x1 & 0xFF, area->x2 >> 8, area->x2 & 0xFF};
@@ -64,7 +71,7 @@ void lv_port_disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_col
     uint8_t data[] = {area->y1 >> 8, area->y1 & 0xFF, area->y2 >> 8, area->y2 & 0xFF};
     ST7789VW_WriteData(data, sizeof(data));
   }
-
+  */
   ST7789VW_WriteCommand(ST7789VW_CMD_RAMWR); //Write to RAM
 
   uint16_t w = (area->x2 - area->x1 + 1);
@@ -96,53 +103,72 @@ void ST7789VW_Init(void)
 {
   xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
 
-  HAL_Delay(25);
-
   ST7789VW_RST_Clr(); //Reset chip
-  HAL_Delay(25);
+  vTaskDelay(10);
   ST7789VW_RST_Set(); //Reset chip run
-  HAL_Delay(50);
 
   ST7789VW_Select(); //Select ST7789VW chip
   ST7789VW_DC_Set(); //Set data mode
+
+  ST7789VW_WriteCommand(ST7789VW_CMD_SWRESET); // Software reset
+
+  vTaskDelay(50); // wait after reset
+
+  ST7789VW_WriteCommand(ST7789VW_CMD_SLPOUT); //Out of sleep mode
 
   ST7789VW_WriteCommand(ST7789VW_CMD_COLMOD); //Set color mode
   ST7789VW_WriteByteData(ST7789VW_COLMOD_16bit);
 
   ST7789VW_SetRotation(ST7789VW_ROTATION); //MADCTL (Display Rotation)
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_INVON); //Inversion ON
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_PORCTRL); //Porch control
+  ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
   {
-    uint8_t data[] = {0x0C, 0x0C, 0x00, 0x33, 0x33};
+    uint8_t data[] = {0, 0, TFT_HOR_RES >> 8, TFT_HOR_RES & 0xFF};
     ST7789VW_WriteData(data, sizeof(data));
   }
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_GCTRL); //Gate Control
-  ST7789VW_WriteByteData(0x35); //Default value
+  ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
+  {
+    uint8_t data[] = {0, 0, TFT_VER_RES >> 8, TFT_VER_RES & 0xFF};
+    ST7789VW_WriteData(data, sizeof(data));
+  }
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_VCOMS); //VCOM setting
-  ST7789VW_WriteByteData(0x1f); //0x19: 0.725v, 1Fh: 0.875v
+  ST7789VW_WriteCommand(ST7789VW_CMD_INVON); //Inversion ON
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_LCMCTRL); //LCMCTRL
-  ST7789VW_WriteByteData(0x2C); //Default value
+  ST7789VW_WriteCommand(ST7789VW_CMD_NORON); //Normal Display on
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_VDVVRHEN); //VDV and VRH command Enable
-  ST7789VW_WriteByteData(0x01); //Default value
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_VRHS); //VRH set
-  ST7789VW_WriteByteData(0x12); //4.45+( vcom+vcom offset+vdv)
+//  ST7789VW_WriteCommand(ST7789VW_CMD_PORCTRL); //Porch control
+//  {
+//    uint8_t data[] = {0x0C, 0x0C, 0x00, 0x33, 0x33};
+//    ST7789VW_WriteData(data, sizeof(data));
+//  }
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_VDVSET); //VDV set
-  ST7789VW_WriteByteData(0x20); //Default value
-
-  ST7789VW_WriteCommand(ST7789VW_CMD_FRCTR2); //Frame rate control in normal mode
-  ST7789VW_WriteByteData(0x0F); //Default value (60HZ)
-
-  ST7789VW_WriteCommand (ST7789VW_CMD_PWCTRL1); //Power control
-  ST7789VW_WriteByteData (0xA4); //Default value
-  ST7789VW_WriteByteData (0xA1); //Default value
+//  ST7789VW_WriteCommand(ST7789VW_CMD_GCTRL); //Gate Control
+//  ST7789VW_WriteByteData(0x35); //Default value
+//
+//  ST7789VW_WriteCommand(ST7789VW_CMD_VCOMS); //VCOM setting
+//  ST7789VW_WriteByteData(0x1f); //0x19: 0.725v, 1Fh: 0.875v
+//
+//  ST7789VW_WriteCommand(ST7789VW_CMD_LCMCTRL); //LCMCTRL
+//  ST7789VW_WriteByteData(0x2C); //Default value
+//
+//  ST7789VW_WriteCommand(ST7789VW_CMD_VDVVRHEN); //VDV and VRH command Enable
+//  ST7789VW_WriteByteData(0x01); //Default value
+//
+//  ST7789VW_WriteCommand(ST7789VW_CMD_VRHS); //VRH set
+//  ST7789VW_WriteByteData(0x12); //4.45+( vcom+vcom offset+vdv)
+//
+//  ST7789VW_WriteCommand(ST7789VW_CMD_VDVSET); //VDV set
+//  ST7789VW_WriteByteData(0x20); //Default value
+//
+//  ST7789VW_WriteCommand(ST7789VW_CMD_FRCTR2); //Frame rate control in normal mode
+//  ST7789VW_WriteByteData(0x0F); //Default value (60HZ)
+//
+//  ST7789VW_WriteCommand (ST7789VW_CMD_PWCTRL1); //Power control
+//  ST7789VW_WriteByteData (0xA4); //Default value
+//  ST7789VW_WriteByteData (0xA1); //Default value
 
 //  ST7789VW_WriteCommand(ST7789VW_CMD_PVGAMCTRL); //Positive Voltage Gamma Control
 //  {
@@ -160,8 +186,7 @@ void ST7789VW_Init(void)
 
   //ST7789VW_WriteCommand(1 ? ST7789VW_CMD_TEON : ST7789VW_CMD_TEOFF); //Tearing effect line
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_SLPOUT); //Out of sleep mode
-  ST7789VW_WriteCommand(ST7789VW_CMD_NORON); //Normal Display on
+
   ST7789VW_WriteCommand(ST7789VW_CMD_DISPON); //Main screen turned on
 
   ST7789VW_UnSelect();

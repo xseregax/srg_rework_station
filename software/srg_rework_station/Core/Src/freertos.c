@@ -27,7 +27,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lvgl.h"
-#include "mcp23017.h"
+
+#include "enc_buttons.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -129,7 +131,7 @@ void vApplicationTickHook( void )
    code must not attempt to block, and only the interrupt safe FreeRTOS API
    functions can be used (those that end in FromISR()). */
 
-   lv_tick_inc(portTICK_PERIOD_MS);
+   lv_tick_inc(1 / portTICK_PERIOD_MS);
 }
 /* USER CODE END 3 */
 
@@ -209,7 +211,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -225,11 +227,14 @@ void StartTaskLvgl(void *argument)
 {
   /* USER CODE BEGIN StartTaskLvgl */
 
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+
   /* Infinite loop */
   for(;;)
   {
-	lv_timer_handler();
-    osDelay(5);
+    uint32_t delay = lv_timer_handler();
+
+	vTaskDelayUntil(&xLastWakeTime, delay / portTICK_PERIOD_MS);
   }
   /* USER CODE END StartTaskLvgl */
 }
@@ -245,13 +250,12 @@ void StartTaskInputs(void *argument)
 {
   /* USER CODE BEGIN StartTaskInputs */
 
-  // init mcp23017 extender ports
-  mcp23017_init();
-
   /* Infinite loop */
   for(;;)
   {
     uint32_t ulNotifiedValue = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+
+
     osDelay(1);
   }
   /* USER CODE END StartTaskInputs */
@@ -267,10 +271,15 @@ void StartTaskInputs(void *argument)
 void StartTaskEncoder(void *argument)
 {
   /* USER CODE BEGIN StartTaskEncoder */
+
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    lv_port_encoder_handler();
+
+    vTaskDelayUntil(&xLastWakeTime, 50 / portTICK_PERIOD_MS);
   }
   /* USER CODE END StartTaskEncoder */
 }

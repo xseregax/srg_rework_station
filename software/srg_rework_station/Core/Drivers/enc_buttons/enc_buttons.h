@@ -15,10 +15,12 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "lvgl.h"
+#include "tim.h"
 
 /*********************
  *      DEFINES
  *********************/
+#define ENCODER_PORT &htim8
 
 /**********************
  *      TYPEDEFS
@@ -28,6 +30,8 @@ extern "C" {
  * GLOBAL PROTOTYPES
  **********************/
 void lv_port_indev_init(void);
+void lv_port_encoder_handler(void);
+
 
 /**********************
  *      MACROS

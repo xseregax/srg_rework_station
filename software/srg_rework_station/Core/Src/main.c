@@ -112,7 +112,7 @@ int main(void)
   MX_CRC_Init();
   MX_RNG_Init();
   /* USER CODE BEGIN 2 */
-//HAL_ADC_ConvCpltCallback
+
   /*Gui initialization*/
   lv_init();
 
@@ -121,6 +121,11 @@ int main(void)
 
   /* encoder and buttons initialization */
   lv_port_indev_init();
+
+  // init mcp23017 extender ports
+  mcp23017_init();
+
+  //HAL_ADC_ConvCpltCallback
 
   /* USER CODE END 2 */
 

@@ -7,7 +7,7 @@
  *      INCLUDES
  *********************/
 #include "enc_buttons.h"
-
+#include "tim.h"
 /*********************
  *      DEFINES
  *********************/
@@ -24,7 +24,7 @@ void encoder_init(void);
 void encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
 void encoder_handler(void);
 
-void button_init(void);
+void buttons_init(void);
 void button_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
 int8_t button_get_pressed_id(void);
 bool button_is_pressed(uint8_t id);
@@ -38,6 +38,9 @@ lv_indev_t * indev_button;
 static int32_t encoder_diff;
 static lv_indev_state_t encoder_state;
 
+static int32_t encoder_value_curr;
+static int32_t encoder_value_prev;
+
 /**********************
  *      MACROS
  **********************/
@@ -49,6 +52,9 @@ static lv_indev_state_t encoder_state;
 void lv_port_indev_init(void)
 {
   static lv_indev_drv_t indev_drv;
+
+  lv_group_t *default_group = lv_group_create();
+  lv_group_set_default(default_group);
 
   /*------------------
    * Encoder
@@ -63,6 +69,8 @@ void lv_port_indev_init(void)
   indev_drv.read_cb = encoder_read;
   indev_encoder = lv_indev_drv_register(&indev_drv);
 
+  lv_indev_set_group(indev_encoder, default_group);
+
   /*Later you should create group(s) with `lv_group_t * group = lv_group_create()`,
    *add objects to the group with `lv_group_add_obj(group, obj)`
    *and assign this input device to group to navigate in it:
@@ -73,13 +81,15 @@ void lv_port_indev_init(void)
    * -----------------*/
 
   /*Initialize your button if you have*/
-  button_init();
+  buttons_init();
 
   /*Register a button input device*/
   lv_indev_drv_init(&indev_drv);
   indev_drv.type = LV_INDEV_TYPE_BUTTON;
   indev_drv.read_cb = button_read;
   indev_button = lv_indev_drv_register(&indev_drv);
+
+  lv_indev_set_group(indev_button, default_group);
 
   /*Assign buttons to points on the screen*/
   static const lv_point_t btn_points[2] = {
@@ -95,27 +105,44 @@ void lv_port_indev_init(void)
  * Encoder
  * -----------------*/
 
-/*Initialize your keypad*/
+// Initialize your encoder
 void encoder_init(void)
 {
-    /*Your code comes here*/
+  encoder_value_prev = __HAL_TIM_GET_COUNTER(ENCODER_PORT);
 }
 
 /*Will be called by the library to read the encoder*/
 void encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 {
-
-    data->enc_diff = encoder_diff;
-    data->state = encoder_state;
+  data->enc_diff = encoder_diff;
+  data->state = encoder_state;
 }
 
 /*Call this function in an interrupt to process encoder events (turn, press)*/
-void encoder_handler(void)
+void lv_port_encoder_handler(void)
 {
-    /*Your code comes here*/
+  encoder_value_curr = __HAL_TIM_GET_COUNTER(ENCODER_PORT);
 
-    encoder_diff += 0;
-    encoder_state = LV_INDEV_STATE_REL;
+  int32_t diff;
+
+  if (__HAL_TIM_IS_TIM_COUNTING_DOWN(ENCODER_PORT))
+  {
+    diff = encoder_value_prev - encoder_value_curr;
+    if (encoder_value_curr >= encoder_value_prev)
+      diff += 65535;
+
+  } else {
+    diff = encoder_value_curr - encoder_value_prev;
+
+    if (encoder_value_curr <= encoder_value_prev)
+      diff += 65535;
+  }
+
+  encoder_value_prev = encoder_value_curr;
+
+  encoder_diff += diff;
+
+  encoder_state = LV_INDEV_STATE_RELEASED; //LV_INDEV_STATE_RELEASED | LV_INDEV_STATE_PRESSED
 }
 
 /*------------------
@@ -123,7 +150,7 @@ void encoder_handler(void)
  * -----------------*/
 
 /*Initialize your buttons*/
-void button_init(void)
+void buttons_init(void)
 {
     /*Your code comes here*/
 }
@@ -146,6 +173,8 @@ void button_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 
     /*Save the last pressed button's ID*/
     data->btn_id = last_btn;
+
+    //data->continue_reading
 }
 
 /*Get ID  (0, 1, 2 ..) of the pressed button*/
