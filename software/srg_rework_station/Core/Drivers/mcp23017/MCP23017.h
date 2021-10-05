@@ -1,18 +1,9 @@
 
-#ifndef __MCP23017_H
-#define __MCP23017_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "stm32f7xx_hal.h"
-#include "i2c.h"
-#include "main.h"
-// I2C
-#define MCP23017_I2C_PORT &hi2c2
-// I2C address
-#define MCP23017_I2C_ADDR MCP23017_ADDRESS_20
+#include <cmsis_os.h>
+
 // I2C timeout
 #define MCP23017_I2C_TIMEOUT 10
 
@@ -188,12 +179,12 @@ are enabled (GPINTEN) <7:0>.
 
  */
 
+typedef struct {
+    // I2C
+    I2C_HandleTypeDef *i2cHandle;
+    osMutexId_t myMutexI2cInputsHandle;
 
-HAL_StatusTypeDef mcp23017_init(void);
 
+} MCP23017;
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __MCP23017_H */
+HAL_StatusTypeDef MCP23017_Init(I2C_HandleTypeDef *i2cHandle);

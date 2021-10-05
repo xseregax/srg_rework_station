@@ -2,141 +2,100 @@
  * @file  ST7789VW.c
  *
  */
-
 #include "ST7789VW.h"
-#include "FreeRTOS.h"
-#include "cmsis_os.h"
-#include "semphr.h"
+#include <semphr.h>
 
-extern osMutexId_t myMutexLcdHandle;
+ST7789VW lcd = {0};
+
+const osMutexAttr_t myMutexLcd_attributes = {
+        .name = "myMutexLcd"
+};
 
 // Basic functions
-void ST7789VW_Init(void);
+void ST7789VW_HW_Init(void);
+
+inline void ST7789VW_Select(void);
+
+inline void ST7789VW_UnSelect(void);
+
+inline void ST7789VW_RST_Clr(void);
+
+inline void ST7789VW_RST_Set(void);
+
+inline void ST7789VW_DC_Clr(void);
+
+inline void ST7789VW_DC_Set(void);
+
 void ST7789VW_SetRotation(uint8_t m);
+
 void ST7789VW_WriteCommand(uint8_t cmd);
+
 void ST7789VW_WriteData(uint8_t *buff, size_t buff_size);
+
 void ST7789VW_WriteByteData(uint8_t data);
 
 
-//init display and register in lvgl
-void lv_port_disp_init(void)
-{
-  ST7789VW_Init(); //Initialize ST7789VW display
 
-  static lv_disp_draw_buf_t draw_buf_dsc; //Create a buffer for drawing
-  static lv_color_t buf_1[ ST7789VW_BUFFER];
+//init display
+HAL_StatusTypeDef ST7789VW_Init(SPI_HandleTypeDef *spiHandle, GPIO_TypeDef *gpResetPort, uint16_t gpResetPin,
+                       GPIO_TypeDef *gpCsPort, uint16_t gpCsPin, GPIO_TypeDef *gpDcPort, uint16_t gpDcPin,
+                       GPIO_TypeDef *gpLedPort, uint16_t gpLedPin) {
 
-#if  ST7789VW_BUFFER_COUNT == 1
-  lv_disp_draw_buf_init(&draw_buf_dsc, buf_1, NULL,  ST7789VW_BUFFER);   /*Initialize display buffer*/
-#else
-  static lv_color_t buf_2[ ST7789VW_BUFFER];
-  lv_disp_draw_buf_init(&draw_buf_dsc, buf_1, buf_2,  ST7789VW_BUFFER);   /*Initialize two display buffers*/
-#endif
+    lcd.spiHandle = spiHandle;
+    lcd.myMutexLcdHandle = osMutexNew(&myMutexLcd_attributes);
 
-  static lv_disp_drv_t disp_drv; //Register the display in LVGL
-  lv_disp_drv_init(&disp_drv);
+    lcd.gpResetPort = gpResetPort;
+    lcd.gpResetPin = gpResetPin;
+    lcd.gpCsPort = gpCsPort;
+    lcd.gpCsPin = gpCsPin;
+    lcd.gpDcPort = gpDcPort;
+    lcd.gpDcPin = gpDcPin;
+    lcd.gpLedPort = gpLedPort;
+    lcd.gpLedPin = gpLedPin;
 
-  //Set the resolution of the display
-  disp_drv.hor_res = TFT_HOR_RES;
-  disp_drv.ver_res = TFT_VER_RES;
+    ST7789VW_HW_Init(); //Initialize ST7789VW display
 
-  disp_drv.draw_buf = &draw_buf_dsc;
-  disp_drv.flush_cb = lv_port_disp_flush;
-
-  lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
-  lv_disp_set_default(disp);
-}
-
-//transmit display buffer to st7789vw
-void lv_port_disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
-{
-  if(area->x2 < 0) return;
-  if(area->y2 < 0) return;
-  if(area->x1 > TFT_HOR_RES - 1) return;
-  if(area->y1 > TFT_VER_RES - 1) return;
-
-  xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
-
-  ST7789VW_Select();
-
-  /*
-  ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
-  {
-    uint8_t data[] = {area->x1 >> 8, area->x1 & 0xFF, area->x2 >> 8, area->x2 & 0xFF};
-    ST7789VW_WriteData(data, sizeof(data));
-  }
-
-  ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
-  {
-    uint8_t data[] = {area->y1 >> 8, area->y1 & 0xFF, area->y2 >> 8, area->y2 & 0xFF};
-    ST7789VW_WriteData(data, sizeof(data));
-  }
-  */
-  ST7789VW_WriteCommand(ST7789VW_CMD_RAMWR); //Write to RAM
-
-  uint16_t w = (area->x2 - area->x1 + 1);
-  uint16_t h = (area->y2 - area->y1 + 1);
-
-  HAL_SPI_Transmit_DMA(&ST7789VW_SPI_PORT, (uint8_t *)color_p, w * h * 2);
-
-  xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
-
-  ST7789VW_UnSelect();
-
-  /*IMPORTANT!!!
-   *Inform the graphics library that you are ready with the flushing*/
-  lv_disp_flush_ready(disp_drv);
-
-  xSemaphoreGive(myMutexLcdHandle);
-}
-
-void lv_port_disp_give_ISR(void)
-{
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  xSemaphoreGiveFromISR(myMutexLcdHandle, &xHigherPriorityTaskWoken);
-
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    return HAL_OK;
 }
 
 /*Initialize your display and the required peripherals.*/
-void ST7789VW_Init(void)
-{
-  xSemaphoreTake(myMutexLcdHandle, portMAX_DELAY);
+void ST7789VW_HW_Init(void) {
+    xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
 
-  ST7789VW_RST_Clr(); //Reset chip
-  vTaskDelay(10);
-  ST7789VW_RST_Set(); //Reset chip run
+    ST7789VW_RST_Clr(); //Reset chip
+    HAL_Delay(10);
+    ST7789VW_RST_Set(); //Reset chip run
 
-  ST7789VW_Select(); //Select ST7789VW chip
-  ST7789VW_DC_Set(); //Set data mode
+    ST7789VW_Select(); //Select ST7789VW chip
+    ST7789VW_DC_Set(); //Set data mode
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_SWRESET); // Software reset
+    ST7789VW_WriteCommand(ST7789VW_CMD_SWRESET); // Software reset
 
-  vTaskDelay(50); // wait after reset
+    HAL_Delay(50); // wait after reset
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_SLPOUT); //Out of sleep mode
+    ST7789VW_WriteCommand(ST7789VW_CMD_SLPOUT); //Out of sleep mode
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_COLMOD); //Set color mode
-  ST7789VW_WriteByteData(ST7789VW_COLMOD_16bit);
+    ST7789VW_WriteCommand(ST7789VW_CMD_COLMOD); //Set color mode
+    ST7789VW_WriteByteData(ST7789VW_COLMOD_16bit);
 
-  ST7789VW_SetRotation(ST7789VW_ROTATION); //MADCTL (Display Rotation)
+    ST7789VW_SetRotation(ST7789VW_ROTATION); //MADCTL (Display Rotation)
 
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
-  {
-    uint8_t data[] = {0, 0, TFT_HOR_RES >> 8, TFT_HOR_RES & 0xFF};
-    ST7789VW_WriteData(data, sizeof(data));
-  }
+    ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
+    {
+        uint8_t data[] = {0, 0, TFT_HOR_RES >> 8, TFT_HOR_RES & 0xFF};
+        ST7789VW_WriteData(data, sizeof(data));
+    }
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
-  {
-    uint8_t data[] = {0, 0, TFT_VER_RES >> 8, TFT_VER_RES & 0xFF};
-    ST7789VW_WriteData(data, sizeof(data));
-  }
+    ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
+    {
+        uint8_t data[] = {0, 0, TFT_VER_RES >> 8, TFT_VER_RES & 0xFF};
+        ST7789VW_WriteData(data, sizeof(data));
+    }
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_INVON); //Inversion ON
+    ST7789VW_WriteCommand(ST7789VW_CMD_INVON); //Inversion ON
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_NORON); //Normal Display on
+    ST7789VW_WriteCommand(ST7789VW_CMD_NORON); //Normal Display on
 
 
 //  ST7789VW_WriteCommand(ST7789VW_CMD_PORCTRL); //Porch control
@@ -184,27 +143,51 @@ void ST7789VW_Init(void)
 //     ST7789VW_WriteData(data, sizeof(data));
 //  }
 
-  //ST7789VW_WriteCommand(1 ? ST7789VW_CMD_TEON : ST7789VW_CMD_TEOFF); //Tearing effect line
+    //ST7789VW_WriteCommand(1 ? ST7789VW_CMD_TEON : ST7789VW_CMD_TEOFF); //Tearing effect line
 
 
-  ST7789VW_WriteCommand(ST7789VW_CMD_DISPON); //Main screen turned on
+    ST7789VW_WriteCommand(ST7789VW_CMD_DISPON); //Main screen turned on
 
-  ST7789VW_UnSelect();
+    ST7789VW_UnSelect();
 
-  xSemaphoreGive(myMutexLcdHandle);
+    xSemaphoreGive(lcd.myMutexLcdHandle);
 }
 
+
+inline void ST7789VW_RST_Clr(void) {
+    HAL_GPIO_WritePin(lcd.gpResetPort, lcd.gpResetPin, GPIO_PIN_RESET);
+}
+
+inline void ST7789VW_RST_Set(void) {
+    HAL_GPIO_WritePin(lcd.gpResetPort, lcd.gpResetPin, GPIO_PIN_SET);
+}
+
+inline void ST7789VW_DC_Clr(void) {
+    HAL_GPIO_WritePin(lcd.gpDcPort, lcd.gpDcPin, GPIO_PIN_RESET);
+}
+
+inline void ST7789VW_DC_Set(void) {
+    HAL_GPIO_WritePin(lcd.gpDcPort, lcd.gpDcPin, GPIO_PIN_SET);
+}
+
+
+inline void ST7789VW_Select(void) {
+    HAL_GPIO_WritePin(lcd.gpCsPort, lcd.gpCsPin, GPIO_PIN_RESET);
+}
+
+inline void ST7789VW_UnSelect(void) {
+    HAL_GPIO_WritePin(lcd.gpCsPort, lcd.gpCsPin, GPIO_PIN_RESET);
+}
 
 /**
  * @brief Write command to  ST7789VW controller
  * @param cmd -> command to write
  * @return none
  */
-void ST7789VW_WriteCommand(uint8_t cmd)
-{
-   ST7789VW_DC_Clr(); //Set command mode
-   HAL_SPI_Transmit(&ST7789VW_SPI_PORT, &cmd, sizeof(cmd), HAL_MAX_DELAY);
-   ST7789VW_DC_Set(); //Restore data mode
+void ST7789VW_WriteCommand(uint8_t cmd) {
+    ST7789VW_DC_Clr(); //Set command mode
+    HAL_SPI_Transmit(lcd.spiHandle, &cmd, sizeof(cmd), HAL_MAX_DELAY);
+    ST7789VW_DC_Set(); //Restore data mode
 }
 
 /**
@@ -213,26 +196,25 @@ void ST7789VW_WriteCommand(uint8_t cmd)
  * @param buff_size -> size of the data buffer
  * @return none
  */
-void ST7789VW_WriteData(uint8_t *buff, size_t buff_size)
-{
-  // split data in small chunks because HAL can't send more than 64K at once
+void ST7789VW_WriteData(uint8_t *buff, size_t buff_size) {
+    // split data in small chunks because HAL can't send more than 64K at once
 
-  while (buff_size > 0) {
-      uint16_t chunk_size = buff_size > 65535 ? 65535 : buff_size;
-      HAL_SPI_Transmit(&ST7789VW_SPI_PORT, buff, chunk_size, HAL_MAX_DELAY);
-      buff += chunk_size;
-      buff_size -= chunk_size;
-  }
+    while (buff_size > 0) {
+        uint16_t chunk_size = buff_size > 65535 ? 65535 : buff_size;
+        HAL_SPI_Transmit(lcd.spiHandle, buff, chunk_size, HAL_MAX_DELAY);
+        buff += chunk_size;
+        buff_size -= chunk_size;
+    }
 
 }
+
 /**
  * @brief Write data to  ST7789VW controller, simplify for 8bit data.
  * data -> data to write
  * @return none
  */
-void ST7789VW_WriteByteData(uint8_t data)
-{
-  HAL_SPI_Transmit(&ST7789VW_SPI_PORT, &data, sizeof(data), HAL_MAX_DELAY);
+void ST7789VW_WriteByteData(uint8_t data) {
+    HAL_SPI_Transmit(lcd.spiHandle, &data, sizeof(data), HAL_MAX_DELAY);
 }
 
 /**
@@ -240,25 +222,62 @@ void ST7789VW_WriteByteData(uint8_t data)
  * @param m -> rotation parameter(please refer it in  ST7789VW.h)
  * @return none
  */
-void ST7789VW_SetRotation(uint8_t m)
-{
-  ST7789VW_WriteCommand(ST7789VW_CMD_MADCTL); // MADCTL
-  switch (m) {
-    case 0: //X-Mirror Y-Mirror
-      ST7789VW_WriteByteData( ST7789VW_MADCTL_MX |  ST7789VW_MADCTL_MY |  ST7789VW_MADCTL_RGB);
-      break;
-    case 1: //X-Y  Exchange Y-Mirror
-      ST7789VW_WriteByteData( ST7789VW_MADCTL_MY |  ST7789VW_MADCTL_MV |  ST7789VW_MADCTL_RGB);
-      break;
-    case 2: //Normal
-      ST7789VW_WriteByteData( ST7789VW_MADCTL_RGB);
-      break;
-    case 3: //X-Y Exchange X-Mirror
-      ST7789VW_WriteByteData( ST7789VW_MADCTL_MX |  ST7789VW_MADCTL_MV |  ST7789VW_MADCTL_RGB);
-      break;
-    default:
-      break;
-  }
+void ST7789VW_SetRotation(uint8_t m) {
+    ST7789VW_WriteCommand(ST7789VW_CMD_MADCTL); // MADCTL
+    switch (m) {
+        case 0: //X-Mirror Y-Mirror
+            ST7789VW_WriteByteData(ST7789VW_MADCTL_MX | ST7789VW_MADCTL_MY | ST7789VW_MADCTL_RGB);
+            break;
+        case 1: //X-Y  Exchange Y-Mirror
+            ST7789VW_WriteByteData(ST7789VW_MADCTL_MY | ST7789VW_MADCTL_MV | ST7789VW_MADCTL_RGB);
+            break;
+        case 2: //Normal
+            ST7789VW_WriteByteData(ST7789VW_MADCTL_RGB);
+            break;
+        case 3: //X-Y Exchange X-Mirror
+            ST7789VW_WriteByteData(ST7789VW_MADCTL_MX | ST7789VW_MADCTL_MV | ST7789VW_MADCTL_RGB);
+            break;
+        default:
+            break;
+    }
 }
 
 
+void ST7789VW_ShowBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t *color_p)
+{
+    xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
+
+    ST7789VW_Select();
+
+    ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
+    {
+      uint8_t data[] = {x1 >> 8, x1 & 0xFF, x2 >> 8, x2 & 0xFF};
+      ST7789VW_WriteData(data, sizeof(data));
+    }
+
+    ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
+    {
+      uint8_t data[] = {y1 >> 8, y1 & 0xFF, y2 >> 8, y2 & 0xFF};
+      ST7789VW_WriteData(data, sizeof(data));
+    }
+
+    ST7789VW_WriteCommand(ST7789VW_CMD_RAMWR); //Write to RAM
+
+    uint16_t w = (x2 - x1 + 1);
+    uint16_t h = (y2 - y1 + 1);
+
+    HAL_SPI_Transmit_DMA(lcd.spiHandle, color_p, w * h * 2);
+
+    xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
+
+    ST7789VW_UnSelect();
+
+    xSemaphoreGive(lcd.myMutexLcdHandle);
+}
+
+void ST7789VW_Give_ISR(void) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR(lcd.myMutexLcdHandle, &xHigherPriorityTaskWoken);
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}

@@ -2,17 +2,11 @@
  * @file  ST7789VW.h
  *
  */
+#pragma once
 
-#ifndef ST7789VW_H
-#define ST7789VW_H
+#include "stm32f7xx_hal.h"
+#include <cmsis_os.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-#include "main.h"
-#include "spi.h"
 
 /*
 ST7789VW 2.0"
@@ -26,11 +20,8 @@ DCX Clock signal
 SDA Serial input/output data
 
 320*240*16bit = 153 600 bytes
-
+//HAL_ADC_ConvCpltCallback
 */
-
-// SPI
-#define ST7789VW_SPI_PORT hspi1
 
 // Horizontal resolution
 #define TFT_HOR_RES 320
@@ -39,24 +30,7 @@ SDA Serial input/output data
 // Normal position
 #define ST7789VW_ROTATION 2
 
-//pixel count, buffer split to 3 parts or TFT_HOR_RES*10 rows
-#define ST7789VW_BUFFER TFT_HOR_RES*TFT_VER_RES/3
-// 1 or 2 buffers
-#define ST7789VW_BUFFER_COUNT 1
-
-
 /***********************/
-
-// Pin connection
-#define ST7789VW_RST_PORT LCD_RESET_GPIO_Port
-#define ST7789VW_RST_PIN  LCD_RESET_Pin
-#define ST7789VW_DC_PORT  LCD_DC_GPIO_Port
-#define ST7789VW_DC_PIN   LCD_DC_Pin
-#define ST7789VW_CS_PORT  LCD_CS_GPIO_Port
-#define ST7789VW_CS_PIN   LCD_CS_Pin
-#define ST7789VW_LED_PORT LCD_PWM_GPIO_Port
-#define ST7789VW_LED_PIN  LCD_PWM_Pin
-
 
 // ST7789VW System Function Command
 #define ST7789VW_CMD_NOP        0x00 //No operation
@@ -88,30 +62,30 @@ SDA Serial input/output data
 #define ST7789VW_CMD_TEON       0x35 //Tearing effect line on
 
 #define ST7789VW_CMD_MADCTL     0x36 //Memory data access control
-    /**
-     * Memory Data Access Control Register (0x36H)
-     * MAP:     D7  D6  D5  D4  D3  D2  D1  D0
-     * param:   MY  MX  MV  ML  RGB MH  -   -
-     */
-    /* Page Address Order ('0': Top to Bottom, '1': the opposite) */
-    #define ST7789VW_MADCTL_MY  0x80
-    /* Column Address Order ('0': Left to Right, '1': the opposite) */
-    #define ST7789VW_MADCTL_MX  0x40
-    /* Page/Column Order ('0' = Normal Mode, '1' = Reverse Mode) */
-    #define ST7789VW_MADCTL_MV  0x20
-    /* Line Address Order ('0' = LCD Refresh Top to Bottom, '1' = the opposite) */
-    #define ST7789VW_MADCTL_ML  0x10
-    /* RGB/BGR Order ('0' = RGB, '1' = BGR) */
-    #define ST7789VW_MADCTL_RGB 0x00
+/**
+ * Memory Data Access Control Register (0x36H)
+ * MAP:     D7  D6  D5  D4  D3  D2  D1  D0
+ * param:   MY  MX  MV  ML  RGB MH  -   -
+ */
+/* Page Address Order ('0': Top to Bottom, '1': the opposite) */
+#define ST7789VW_MADCTL_MY  0x80
+/* Column Address Order ('0': Left to Right, '1': the opposite) */
+#define ST7789VW_MADCTL_MX  0x40
+/* Page/Column Order ('0' = Normal Mode, '1' = Reverse Mode) */
+#define ST7789VW_MADCTL_MV  0x20
+/* Line Address Order ('0' = LCD Refresh Top to Bottom, '1' = the opposite) */
+#define ST7789VW_MADCTL_ML  0x10
+/* RGB/BGR Order ('0' = RGB, '1' = BGR) */
+#define ST7789VW_MADCTL_RGB 0x00
 
 #define ST7789VW_CMD_VSCRSADD   0x37 //Vertical scrolling start address
 #define ST7789VW_CMD_IDMOFF     0x38 //Idle mode off
 #define ST7789VW_CMD_IDMON      0x39 //Idle mode on
 
 #define ST7789VW_CMD_COLMOD     0x3A     //Interface pixel format
-    #define ST7789VW_COLMOD_12bit 0x03    //  RGB444 (12bit)
-    #define ST7789VW_COLMOD_16bit 0x05    //  RGB565 (16bit)
-    #define ST7789VW_COLMOD_18bit 0x06    //  RGB666 (18bit)
+#define ST7789VW_COLMOD_12bit 0x03    //  RGB444 (12bit)
+#define ST7789VW_COLMOD_16bit 0x05    //  RGB565 (16bit)
+#define ST7789VW_COLMOD_18bit 0x06    //  RGB666 (18bit)
 
 #define ST7789VW_CMD_RAMWRC     0x3C     //Memory write continue
 #define ST7789VW_CMD_RAMRDC     0x3E     //Memory read continue
@@ -169,29 +143,33 @@ SDA Serial input/output data
 #define ST7789VW_CMD_NVMSET     0xFC     //NVM Setting
 #define ST7789VW_CMD_PROMACT    0xFE     //Program Action
 
-
-
-// Basic operations
-#define ST7789VW_RST_Clr() HAL_GPIO_WritePin(ST7789VW_RST_PORT, ST7789VW_RST_PIN, GPIO_PIN_RESET)
-#define ST7789VW_RST_Set() HAL_GPIO_WritePin(ST7789VW_RST_PORT, ST7789VW_RST_PIN, GPIO_PIN_SET)
-
-#define ST7789VW_DC_Clr() HAL_GPIO_WritePin(ST7789VW_DC_PORT, ST7789VW_DC_PIN, GPIO_PIN_RESET)
-#define ST7789VW_DC_Set() HAL_GPIO_WritePin(ST7789VW_DC_PORT, ST7789VW_DC_PIN, GPIO_PIN_SET)
-
-#define ST7789VW_Select() HAL_GPIO_WritePin(ST7789VW_CS_PORT, ST7789VW_CS_PIN, GPIO_PIN_RESET)
-#define ST7789VW_UnSelect() HAL_GPIO_WritePin(ST7789VW_CS_PORT, ST7789VW_CS_PIN, GPIO_PIN_SET)
-
-
 /******************************************/
+typedef struct {
+    // SPI
+    SPI_HandleTypeDef *spiHandle;
+    osMutexId_t myMutexLcdHandle;
 
-void lv_port_disp_init(void);
-void lv_port_disp_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t * color_p);
-void lv_port_disp_give_ISR(void);
+    // GPIO
+    GPIO_TypeDef *gpResetPort;
+    uint16_t gpResetPin;
+
+    GPIO_TypeDef *gpCsPort;
+    uint16_t gpCsPin;
+
+    GPIO_TypeDef *gpDcPort;
+    uint16_t gpDcPin;
+
+    GPIO_TypeDef *gpLedPort;
+    uint16_t gpLedPin;
 
 
-#ifdef __cplusplus
-}
-#endif
+} ST7789VW;
 
 
-#endif /* ST7789VW_H*/
+HAL_StatusTypeDef ST7789VW_Init(SPI_HandleTypeDef *spiHandle, GPIO_TypeDef *gpResetPort, uint16_t gpResetPin,
+                       GPIO_TypeDef *gpCsPort, uint16_t gpCsPin, GPIO_TypeDef *gpDcPort, uint16_t gpDcPin,
+                       GPIO_TypeDef *gpLedPort, uint16_t gpLedPin);
+
+void ST7789VW_Give_ISR(void);
+
+void ST7789VW_ShowBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t *color_p);

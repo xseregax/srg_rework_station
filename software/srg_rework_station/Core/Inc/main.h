@@ -34,8 +34,9 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "lvgl.h"
 #include "ST7789VW.h"
-#include "enc_buttons.h"
-#include "mcp23017.h"
+#include "lv_buttons.h"
+#include "lv_display.h"
+#include "MCP23017.h"
 #include "station.h"
 
 /* USER CODE END Includes */
@@ -54,6 +55,8 @@ extern "C" {
 /* USER CODE BEGIN EM */
 
 /* USER CODE END EM */
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
