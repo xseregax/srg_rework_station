@@ -14,6 +14,10 @@ const osMutexAttr_t myMutexLcd_attributes = {
 // Basic functions
 void ST7789VW_HW_Init(void);
 
+inline void ST7789VW_Take(void);
+
+inline void ST7789VW_Give(void);
+
 inline void ST7789VW_Select(void);
 
 inline void ST7789VW_UnSelect(void);
@@ -60,10 +64,10 @@ HAL_StatusTypeDef ST7789VW_Init(SPI_HandleTypeDef *spiHandle, GPIO_TypeDef *gpRe
 
 /*Initialize your display and the required peripherals.*/
 void ST7789VW_HW_Init(void) {
-    xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
+    ST7789VW_Take();
 
     ST7789VW_RST_Clr(); //Reset chip
-    HAL_Delay(10);
+    vTaskDelay(10);
     ST7789VW_RST_Set(); //Reset chip run
 
     ST7789VW_Select(); //Select ST7789VW chip
@@ -71,7 +75,7 @@ void ST7789VW_HW_Init(void) {
 
     ST7789VW_WriteCommand(ST7789VW_CMD_SWRESET); // Software reset
 
-    HAL_Delay(50); // wait after reset
+    vTaskDelay(50); // wait after reset
 
     ST7789VW_WriteCommand(ST7789VW_CMD_SLPOUT); //Out of sleep mode
 
@@ -150,9 +154,18 @@ void ST7789VW_HW_Init(void) {
 
     ST7789VW_UnSelect();
 
-    xSemaphoreGive(lcd.myMutexLcdHandle);
+    ST7789VW_Give();
 }
 
+inline void ST7789VW_Take(void)
+{
+    xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
+}
+
+inline void ST7789VW_Give(void)
+{
+    xSemaphoreGive(lcd.myMutexLcdHandle);
+}
 
 inline void ST7789VW_RST_Clr(void) {
     HAL_GPIO_WritePin(lcd.gpResetPort, lcd.gpResetPin, GPIO_PIN_RESET);
@@ -245,21 +258,21 @@ void ST7789VW_SetRotation(uint8_t m) {
 
 void ST7789VW_ShowBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t *color_p)
 {
-    xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
+    ST7789VW_Take();
 
     ST7789VW_Select();
 
-    ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
-    {
-      uint8_t data[] = {x1 >> 8, x1 & 0xFF, x2 >> 8, x2 & 0xFF};
-      ST7789VW_WriteData(data, sizeof(data));
-    }
-
-    ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
-    {
-      uint8_t data[] = {y1 >> 8, y1 & 0xFF, y2 >> 8, y2 & 0xFF};
-      ST7789VW_WriteData(data, sizeof(data));
-    }
+//    ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
+//    {
+//      uint8_t data[] = {x1 >> 8, x1 & 0xFF, x2 >> 8, x2 & 0xFF};
+//      ST7789VW_WriteData(data, sizeof(data));
+//    }
+//
+//    ST7789VW_WriteCommand(ST7789VW_CMD_RASET); //Row Address set
+//    {
+//      uint8_t data[] = {y1 >> 8, y1 & 0xFF, y2 >> 8, y2 & 0xFF};
+//      ST7789VW_WriteData(data, sizeof(data));
+//    }
 
     ST7789VW_WriteCommand(ST7789VW_CMD_RAMWR); //Write to RAM
 
@@ -268,16 +281,16 @@ void ST7789VW_ShowBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
 
     HAL_SPI_Transmit_DMA(lcd.spiHandle, color_p, w * h * 2);
 
-    xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
+    ST7789VW_Take();
 
     ST7789VW_UnSelect();
 
-    xSemaphoreGive(lcd.myMutexLcdHandle);
+    ST7789VW_Give();
 }
 
-void ST7789VW_Give_ISR(void) {
+inline BaseType_t ST7789VW_Give_ISR(void) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     xSemaphoreGiveFromISR(lcd.myMutexLcdHandle, &xHigherPriorityTaskWoken);
 
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    return xHigherPriorityTaskWoken;
 }

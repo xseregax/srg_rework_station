@@ -1055,9 +1055,13 @@ static void MX_GPIO_Init(void)
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
     if(hspi->Instance == SPI1) {
-        ST7789VW_Give_ISR();
+        xHigherPriorityTaskWoken = ST7789VW_Give_ISR();
     }
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
