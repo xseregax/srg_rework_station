@@ -14,21 +14,21 @@ const osMutexAttr_t myMutexLcd_attributes = {
 // Basic functions
 void ST7789VW_HW_Init(void);
 
-inline void ST7789VW_Take(void);
+void ST7789VW_Take(void);
 
-inline void ST7789VW_Give(void);
+void ST7789VW_Give(void);
 
-inline void ST7789VW_Select(void);
+void ST7789VW_Select(void);
 
-inline void ST7789VW_UnSelect(void);
+void ST7789VW_UnSelect(void);
 
-inline void ST7789VW_RST_Clr(void);
+void ST7789VW_RST_Clr(void);
 
-inline void ST7789VW_RST_Set(void);
+void ST7789VW_RST_Set(void);
 
-inline void ST7789VW_DC_Clr(void);
+void ST7789VW_DC_Clr(void);
 
-inline void ST7789VW_DC_Set(void);
+void ST7789VW_DC_Set(void);
 
 void ST7789VW_SetRotation(uint8_t m);
 
@@ -157,38 +157,38 @@ void ST7789VW_HW_Init(void) {
     ST7789VW_Give();
 }
 
-inline void ST7789VW_Take(void)
+void ST7789VW_Take(void)
 {
     xSemaphoreTake(lcd.myMutexLcdHandle, portMAX_DELAY);
 }
 
-inline void ST7789VW_Give(void)
+void ST7789VW_Give(void)
 {
     xSemaphoreGive(lcd.myMutexLcdHandle);
 }
 
-inline void ST7789VW_RST_Clr(void) {
+void ST7789VW_RST_Clr(void) {
     HAL_GPIO_WritePin(lcd.gpResetPort, lcd.gpResetPin, GPIO_PIN_RESET);
 }
 
-inline void ST7789VW_RST_Set(void) {
+void ST7789VW_RST_Set(void) {
     HAL_GPIO_WritePin(lcd.gpResetPort, lcd.gpResetPin, GPIO_PIN_SET);
 }
 
-inline void ST7789VW_DC_Clr(void) {
+void ST7789VW_DC_Clr(void) {
     HAL_GPIO_WritePin(lcd.gpDcPort, lcd.gpDcPin, GPIO_PIN_RESET);
 }
 
-inline void ST7789VW_DC_Set(void) {
+void ST7789VW_DC_Set(void) {
     HAL_GPIO_WritePin(lcd.gpDcPort, lcd.gpDcPin, GPIO_PIN_SET);
 }
 
 
-inline void ST7789VW_Select(void) {
+void ST7789VW_Select(void) {
     HAL_GPIO_WritePin(lcd.gpCsPort, lcd.gpCsPin, GPIO_PIN_RESET);
 }
 
-inline void ST7789VW_UnSelect(void) {
+void ST7789VW_UnSelect(void) {
     HAL_GPIO_WritePin(lcd.gpCsPort, lcd.gpCsPin, GPIO_PIN_RESET);
 }
 
@@ -256,7 +256,7 @@ void ST7789VW_SetRotation(uint8_t m) {
 }
 
 
-void ST7789VW_ShowBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t *color_p)
+void ST7789VW_DrawBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t *color_p)
 {
     ST7789VW_Take();
 
@@ -288,7 +288,7 @@ void ST7789VW_ShowBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uin
     ST7789VW_Give();
 }
 
-inline BaseType_t ST7789VW_Give_ISR(void) {
+BaseType_t ST7789VW_Give_ISR(void) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     xSemaphoreGiveFromISR(lcd.myMutexLcdHandle, &xHigherPriorityTaskWoken);
 

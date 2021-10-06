@@ -170,6 +170,6 @@ HAL_StatusTypeDef ST7789VW_Init(SPI_HandleTypeDef *spiHandle, GPIO_TypeDef *gpRe
                        GPIO_TypeDef *gpCsPort, uint16_t gpCsPin, GPIO_TypeDef *gpDcPort, uint16_t gpDcPin,
                        GPIO_TypeDef *gpLedPort, uint16_t gpLedPin);
 
-inline BaseType_t ST7789VW_Give_ISR(void);
+BaseType_t ST7789VW_Give_ISR(void);
 
-void ST7789VW_ShowBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t *color_p);
+void ST7789VW_DrawBuffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t *color_p);

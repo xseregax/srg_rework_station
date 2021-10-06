@@ -36,7 +36,7 @@ void lv_display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t
     if (area->x1 > TFT_HOR_RES - 1) return;
     if (area->y1 > TFT_VER_RES - 1) return;
 
-    ST7789VW_ShowBuffer(area->x1, area->y1, area->x2, area->y2, (uint8_t *) color_p);
+    ST7789VW_DrawBuffer(area->x1, area->y1, area->x2, area->y2, (uint8_t *) color_p);
 
     /*IMPORTANT!!!
      *Inform the graphics library that you are ready with the flushing*/

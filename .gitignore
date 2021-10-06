@@ -55,6 +55,8 @@ dkms.conf
 .*
 !/.gitignore
 
+*.launch
+
 Debug
 Release
 
@@ -62,6 +64,5 @@ cmake-build-debug/
 cmake-build-minsizerel/
 cmake-build-release/
 cmake-build-relwithdebinfo/
-
 
 lvgl_edgeline

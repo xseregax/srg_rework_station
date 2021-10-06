@@ -32,12 +32,6 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "lvgl.h"
-#include "ST7789VW.h"
-#include "lv_buttons.h"
-#include "lv_display.h"
-#include "MCP23017.h"
-#include "station.h"
 
 /* USER CODE END Includes */
 

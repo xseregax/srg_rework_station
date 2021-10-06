@@ -24,6 +24,13 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ST7789VW.h"
+#include "MCP23017.h"
+//#include "lvgl.h"
+#include "lv_display.h"
+#include "lv_buttons.h"
+
+
 
 /* USER CODE END Includes */
 
