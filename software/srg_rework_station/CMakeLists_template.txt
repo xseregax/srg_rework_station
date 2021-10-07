@@ -57,7 +57,9 @@ add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=$${PROJECT_BINARY_DI
 add_link_options(-mcpu=${mcpu} -mthumb -mthumb-interwork)
 add_link_options(-T $${LINKER_SCRIPT})
 
-add_executable($${PROJECT_NAME}.elf $${SOURCES} $${LINKER_SCRIPT})
+set(VERSION_FILE $${CMAKE_BINARY_DIR}/version.c)
+
+add_executable($${PROJECT_NAME}.elf $${SOURCES} $${VERSION_FILE} $${LINKER_SCRIPT})
 
 set(HEX_FILE $${PROJECT_BINARY_DIR}/$${PROJECT_NAME}.hex)
 set(BIN_FILE $${PROJECT_BINARY_DIR}/$${PROJECT_NAME}.bin)
@@ -67,3 +69,8 @@ add_custom_command(TARGET $${PROJECT_NAME}.elf POST_BUILD
         COMMAND $${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:$${PROJECT_NAME}.elf> $${BIN_FILE}
         COMMENT "Building $${HEX_FILE}
 Building $${BIN_FILE}")
+
+add_custom_command(
+    OUTPUT $${VERSION_FILE}
+    COMMAND $${CMAKE_COMMAND} -P $${CMAKE_SOURCE_DIR}/version.cmake
+    COMMENT "Building version.c")

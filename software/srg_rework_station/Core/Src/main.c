@@ -24,9 +24,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "version.h"
 #include "ST7789VW.h"
 #include "MCP23017.h"
-//#include "lvgl.h"
+#include "driver_qspi.h"
+
 #include "lv_display.h"
 #include "lv_buttons.h"
 
@@ -527,10 +530,10 @@ static void MX_QUADSPI_Init(void)
   /* USER CODE END QUADSPI_Init 1 */
   /* QUADSPI parameter configuration*/
   hqspi.Instance = QUADSPI;
-  hqspi.Init.ClockPrescaler = 255;
-  hqspi.Init.FifoThreshold = 1;
+  hqspi.Init.ClockPrescaler = 1;
+  hqspi.Init.FifoThreshold = 32;
   hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
-  hqspi.Init.FlashSize = 1;
+  hqspi.Init.FlashSize = 23;
   hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
   hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
   hqspi.Init.FlashID = QSPI_FLASH_ID_1;
@@ -1105,6 +1108,9 @@ void StartDefaultTask(void *argument)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
 
+    // Init flash
+    QSPI_Init(&hqspi, &hdma_quadspi);
+
     /*Lcd st7789vw driver initialization*/
     ST7789VW_Init(&hspi1,
                   LCD_RESET_GPIO_Port, LCD_RESET_Pin,
@@ -1112,7 +1118,7 @@ void StartDefaultTask(void *argument)
                   LCD_DC_GPIO_Port, LCD_DC_Pin,
                   LCD_PWM_GPIO_Port, LCD_PWM_Pin);
 
-    // init mcp23017 extender ports
+    // init MCP23017 extender ports
     MCP23017_Init(&hi2c2);
 
     /*Gui lvgl initialization*/

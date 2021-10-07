@@ -46,7 +46,7 @@ else ()
     add_compile_options(-Og -g)
 endif ()
 
-include_directories(Core/Inc Drivers/STM32F7xx_HAL_Driver/Inc Drivers/STM32F7xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32F7xx/Include Drivers/CMSIS/Include Middlewares/Third_Party/FreeRTOS/Source/include Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 Middlewares/lvgl USB_DEVICE/App USB_DEVICE/Target Middlewares/ST/STM32_USB_Device_Library/Core/Inc Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc Core/Drivers/lvgl_mods Core/Drivers/lvgl Core/Drivers/mcp23017 Core/Drivers/st7789)
+include_directories(Core/Inc Drivers/STM32F7xx_HAL_Driver/Inc Drivers/STM32F7xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32F7xx/Include Drivers/CMSIS/Include Middlewares/Third_Party/FreeRTOS/Source/include Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 Middlewares/lvgl USB_DEVICE/App USB_DEVICE/Target Middlewares/ST/STM32_USB_Device_Library/Core/Inc Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc Core/Drivers/lvgl_mods Core/Drivers/lvgl Core/Drivers/MCP23017 Core/Drivers/ST7789VW Core/Drivers/W25Q128JV)
 
 add_definitions(-DDEBUG -DLV_LVGL_H_INCLUDE_SIMPLE -DUSE_HAL_DRIVER -DSTM32F722xx)
 
@@ -58,7 +58,9 @@ add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=${PROJECT_BINARY_DIR
 add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork)
 add_link_options(-T ${LINKER_SCRIPT})
 
-add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+set(VERSION_FILE ${CMAKE_BINARY_DIR}/version.c)
+
+add_executable(${PROJECT_NAME}.elf ${SOURCES} ${VERSION_FILE} ${LINKER_SCRIPT})
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
@@ -68,3 +70,8 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${BIN_FILE}
         COMMENT "Building ${HEX_FILE}
 Building ${BIN_FILE}")
+
+add_custom_command(
+    OUTPUT ${VERSION_FILE}
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/version.cmake
+    COMMENT "Building version.c")

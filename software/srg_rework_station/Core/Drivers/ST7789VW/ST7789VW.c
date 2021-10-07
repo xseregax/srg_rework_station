@@ -1,7 +1,4 @@
-/**
- * @file  ST7789VW.c
- *
- */
+
 #include "ST7789VW.h"
 #include <semphr.h>
 
@@ -73,17 +70,21 @@ void ST7789VW_HW_Init(void) {
     ST7789VW_Select(); //Select ST7789VW chip
     ST7789VW_DC_Set(); //Set data mode
 
+    ST7789VW_WriteCommand(ST7789VW_CMD_SLPIN); //sleep mode on
     ST7789VW_WriteCommand(ST7789VW_CMD_SWRESET); // Software reset
 
-    vTaskDelay(50); // wait after reset
+    vTaskDelay(100); // wait after reset
 
-    ST7789VW_WriteCommand(ST7789VW_CMD_SLPOUT); //Out of sleep mode
+    ST7789VW_WriteCommand(ST7789VW_CMD_SLPOUT); //sleep mode off
+
+    ST7789VW_SetRotation(ST7789VW_ORIENTATION_LANDSCAPE); //MADCTL (Display Rotation)
 
     ST7789VW_WriteCommand(ST7789VW_CMD_COLMOD); //Set color mode
-    ST7789VW_WriteByteData(ST7789VW_COLMOD_16bit);
+    {
+        ST7789VW_WriteByteData(ST7789VW_COLMOD_16bit);
+    }
 
-    ST7789VW_SetRotation(ST7789VW_ROTATION); //MADCTL (Display Rotation)
-
+    ST7789VW_WriteCommand(ST7789VW_CMD_INVON); //Inversion ON
 
     ST7789VW_WriteCommand(ST7789VW_CMD_CASET); //Column Address set
     {
@@ -97,60 +98,75 @@ void ST7789VW_HW_Init(void) {
         ST7789VW_WriteData(data, sizeof(data));
     }
 
-    ST7789VW_WriteCommand(ST7789VW_CMD_INVON); //Inversion ON
-
-    ST7789VW_WriteCommand(ST7789VW_CMD_NORON); //Normal Display on
-
-
-//  ST7789VW_WriteCommand(ST7789VW_CMD_PORCTRL); //Porch control
-//  {
-//    uint8_t data[] = {0x0C, 0x0C, 0x00, 0x33, 0x33};
-//    ST7789VW_WriteData(data, sizeof(data));
-//  }
-
-//  ST7789VW_WriteCommand(ST7789VW_CMD_GCTRL); //Gate Control
-//  ST7789VW_WriteByteData(0x35); //Default value
+//    ST7789VW_WriteCommand(ST7789VW_CMD_PORCTRL); //Porch control
+//    {
+//        uint8_t data[] = {0x0C, 0x0C, 0x00, 0x33, 0x33};
+//        ST7789VW_WriteData(data, sizeof(data));
+//    }
 //
-//  ST7789VW_WriteCommand(ST7789VW_CMD_VCOMS); //VCOM setting
-//  ST7789VW_WriteByteData(0x1f); //0x19: 0.725v, 1Fh: 0.875v
+//    ST7789VW_WriteCommand(ST7789VW_CMD_GCTRL); //Gate Control
+//    {
+//        ST7789VW_WriteByteData(0x35); //Default value
+//    }
 //
-//  ST7789VW_WriteCommand(ST7789VW_CMD_LCMCTRL); //LCMCTRL
-//  ST7789VW_WriteByteData(0x2C); //Default value
+//    ST7789VW_WriteCommand(ST7789VW_CMD_VCOMS); //VCOM setting
+//    {
+//        ST7789VW_WriteByteData(0x1f); //0x19: 0.725v, 1Fh: 0.875v
+//    }
 //
-//  ST7789VW_WriteCommand(ST7789VW_CMD_VDVVRHEN); //VDV and VRH command Enable
-//  ST7789VW_WriteByteData(0x01); //Default value
+//    ST7789VW_WriteCommand(ST7789VW_CMD_LCMCTRL); //LCM Control setting
+//    {
+//        ST7789VW_WriteByteData(0x2C); //Default value
+//    }
 //
-//  ST7789VW_WriteCommand(ST7789VW_CMD_VRHS); //VRH set
-//  ST7789VW_WriteByteData(0x12); //4.45+( vcom+vcom offset+vdv)
+//    ST7789VW_WriteCommand(ST7789VW_CMD_VDVVRHEN); //VDV and VRH command Enable
+//    {
+//        //re-check 0x01, 0xc3
+//        ST7789VW_WriteByteData(0x01); //Default value
+//    }
 //
-//  ST7789VW_WriteCommand(ST7789VW_CMD_VDVSET); //VDV set
-//  ST7789VW_WriteByteData(0x20); //Default value
+//    ST7789VW_WriteCommand(ST7789VW_CMD_VDVSET); //VDV set
+//    {
+//        ST7789VW_WriteByteData(0x20); //Default value
+//    }
 //
-//  ST7789VW_WriteCommand(ST7789VW_CMD_FRCTR2); //Frame rate control in normal mode
-//  ST7789VW_WriteByteData(0x0F); //Default value (60HZ)
+//    ST7789VW_WriteCommand(ST7789VW_CMD_FRCTR2); //Frame rate control in normal mode
+//    {
+//        ST7789VW_WriteByteData(0x0F); //Default value (60HZ)
+//    }
 //
-//  ST7789VW_WriteCommand (ST7789VW_CMD_PWCTRL1); //Power control
-//  ST7789VW_WriteByteData (0xA4); //Default value
-//  ST7789VW_WriteByteData (0xA1); //Default value
-
-//  ST7789VW_WriteCommand(ST7789VW_CMD_PVGAMCTRL); //Positive Voltage Gamma Control
-//  {
-//    //uint8_t data[] = {0xD0, 0x04, 0x0D, 0x11, 0x13, 0x2B, 0x3F, 0x54, 0x4C, 0x18, 0x0D, 0x0B, 0x1F, 0x23};
-//    uint8_t data[] = {0xD0, 0x08, 0x11, 0x08, 0x0C, 0x15, 0x39, 0x33, 0x50, 0x36, 0x13, 0x14, 0x29, 0x2D};
-//    ST7789VW_WriteData(data, sizeof(data));
-//  }
+//    ST7789VW_WriteCommand (ST7789VW_CMD_PWCTRL1); //Power control
+//    {
+//        uint8_t data[] = {0xA4, 0xA1};
+//        ST7789VW_WriteData(data, sizeof(data));
+//    }
 //
-//  ST7789VW_WriteCommand(ST7789VW_CMD_NVGAMCTRL); //Negative Voltage Gamma Control
-//  {
-//    //uint8_t data[] = {0xD0, 0x04, 0x0C, 0x11, 0x13, 0x2C, 0x3F, 0x44, 0x51, 0x2F, 0x1F, 0x1F, 0x20, 0x23};
-//    uint8_t data[] = {0xD0, 0x08, 0x10, 0x08, 0x06, 0x06, 0x39, 0x44, 0x51, 0x0B, 0x16, 0x14, 0x2F, 0x31};
-//     ST7789VW_WriteData(data, sizeof(data));
-//  }
-
-    //ST7789VW_WriteCommand(1 ? ST7789VW_CMD_TEON : ST7789VW_CMD_TEOFF); //Tearing effect line
+////    ST7789VW_WriteCommand(ST7789VW_CMD_VRHS); //VRH set
+////    {
+////        ST7789VW_WriteByteData(0x12); //4.45+( vcom+vcom offset+vdv)
+////    }
+//
+////    ST7789VW_WriteCommand(ST7789VW_CMD_PVGAMCTRL); //Positive Voltage Gamma Control
+////    {
+////        //uint8_t data[] = {0xD0, 0x04, 0x0D, 0x11, 0x13, 0x2B, 0x3F, 0x54, 0x4C, 0x18, 0x0D, 0x0B, 0x1F, 0x23};
+////        uint8_t data[] = {0xD0, 0x08, 0x11, 0x08, 0x0C, 0x15, 0x39, 0x33, 0x50, 0x36, 0x13, 0x14, 0x29, 0x2D};
+////        ST7789VW_WriteData(data, sizeof(data));
+////    }
+////
+////    ST7789VW_WriteCommand(ST7789VW_CMD_NVGAMCTRL); //Negative Voltage Gamma Control
+////    {
+////        //uint8_t data[] = {0xD0, 0x04, 0x0C, 0x11, 0x13, 0x2C, 0x3F, 0x44, 0x51, 0x2F, 0x1F, 0x1F, 0x20, 0x23};
+////        uint8_t data[] = {0xD0, 0x08, 0x10, 0x08, 0x06, 0x06, 0x39, 0x44, 0x51, 0x0B, 0x16, 0x14, 0x2F, 0x31};
+////        ST7789VW_WriteData(data, sizeof(data));
+////    }
+//
+////    ST7789VW_WriteCommand(ST7789VW_CMD_NORON); //Normal Display on
 
 
     ST7789VW_WriteCommand(ST7789VW_CMD_DISPON); //Main screen turned on
+
+    //00h:VSYNC Interface OFF, 01h:VSYNC Interface ON
+    ST7789VW_WriteCommand(0 ? ST7789VW_CMD_TEON : ST7789VW_CMD_TEOFF); //Tearing effect line
 
     ST7789VW_UnSelect();
 
@@ -235,21 +251,43 @@ void ST7789VW_WriteByteData(uint8_t data) {
  * @param m -> rotation parameter(please refer it in  ST7789VW.h)
  * @return none
  */
-void ST7789VW_SetRotation(uint8_t m) {
+void ST7789VW_SetRotation(uint8_t orientation) {
     ST7789VW_WriteCommand(ST7789VW_CMD_MADCTL); // MADCTL
-    switch (m) {
-        case 0: //X-Mirror Y-Mirror
+
+    switch (orientation) {
+        case ST7789VW_ORIENTATION_LANDSCAPE_ROT180: //X-Mirror Y-Mirror ORIENTATION_LANDSCAPE_ROT180
+
+//            ST7789VW_WriteCommand(ST7789VW_CMD_VSCRDEF); //Vertical Scrolling Definition
+//            {
+//                //TFA describes the Top Fixed Area
+//                //VSA describes the height of the Vertical Scrolling Area
+//                //BFA describes the Bottom Fixed Area
+//                uint8_t data[] = {0, 0, 0x01, 0xf0, 0, 0};
+//                ST7789VW_WriteData(data, sizeof(data));
+//            }
+//
+//            ST7789VW_WriteCommand(ST7789VW_CMD_VSCRSADD); //Vertical Scroll Start Address of RAM
+//            {
+//                //GRAM row nbr (320) - Display row nbr (240) = 80 = 0x50
+//                uint8_t data[] = {0, 0x50};
+//                ST7789VW_WriteData(data, sizeof(data));
+//            }
+
             ST7789VW_WriteByteData(ST7789VW_MADCTL_MX | ST7789VW_MADCTL_MY | ST7789VW_MADCTL_RGB);
             break;
-        case 1: //X-Y  Exchange Y-Mirror
+
+        case ST7789VW_ORIENTATION_X: //X-Y  Exchange Y-Mirror
             ST7789VW_WriteByteData(ST7789VW_MADCTL_MY | ST7789VW_MADCTL_MV | ST7789VW_MADCTL_RGB);
             break;
-        case 2: //Normal
+
+        case ST7789VW_ORIENTATION_LANDSCAPE: //Normal ORIENTATION_LANDSCAPE
             ST7789VW_WriteByteData(ST7789VW_MADCTL_RGB);
             break;
-        case 3: //X-Y Exchange X-Mirror
+
+        case ST7789VW_ORIENTATION_PORTRAIT: //X-Y Exchange X-Mirror ORIENTATION_PORTRAIT
             ST7789VW_WriteByteData(ST7789VW_MADCTL_MX | ST7789VW_MADCTL_MV | ST7789VW_MADCTL_RGB);
             break;
+
         default:
             break;
     }

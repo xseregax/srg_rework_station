@@ -1,7 +1,4 @@
-/**
- * @file  ST7789VW.h
- *
- */
+
 #pragma once
 
 #include "stm32f7xx_hal.h"
@@ -27,10 +24,16 @@ SDA Serial input/output data
 #define TFT_HOR_RES 320
 // Vertical resolution
 #define TFT_VER_RES 240
-// Normal position
-#define ST7789VW_ROTATION 2
+
 
 /***********************/
+
+// Display orientation
+#define ST7789VW_ORIENTATION_LANDSCAPE_ROT180 0
+#define ST7789VW_ORIENTATION_X 1
+#define ST7789VW_ORIENTATION_LANDSCAPE 2
+#define ST7789VW_ORIENTATION_PORTRAIT 3
+
 
 // ST7789VW System Function Command
 #define ST7789VW_CMD_NOP        0x00 //No operation
@@ -68,24 +71,26 @@ SDA Serial input/output data
  * param:   MY  MX  MV  ML  RGB MH  -   -
  */
 /* Page Address Order ('0': Top to Bottom, '1': the opposite) */
-#define ST7789VW_MADCTL_MY  0x80
+#define ST7789VW_MADCTL_MY      0x80 // 1 0 0 0  0 0 0 0
 /* Column Address Order ('0': Left to Right, '1': the opposite) */
-#define ST7789VW_MADCTL_MX  0x40
+#define ST7789VW_MADCTL_MX      0x40 // 0 1 0 0  0 0 0 0
 /* Page/Column Order ('0' = Normal Mode, '1' = Reverse Mode) */
-#define ST7789VW_MADCTL_MV  0x20
+#define ST7789VW_MADCTL_MV      0x20 // 0 0 1 0  0 0 0 0
 /* Line Address Order ('0' = LCD Refresh Top to Bottom, '1' = the opposite) */
-#define ST7789VW_MADCTL_ML  0x10
+#define ST7789VW_MADCTL_ML      0x10 // 0 0 0 1  0 0 0 0
 /* RGB/BGR Order ('0' = RGB, '1' = BGR) */
-#define ST7789VW_MADCTL_RGB 0x00
+#define ST7789VW_MADCTL_RGB     0x00 // 0 0 0 0  0 0 0 0
+#define ST7789VW_MADCTL_BGR     0x08 // 0 0 0 0  1 0 0 0
+#define ST7789VW_MADCTL_MH      0x04 // 0 0 0 0  0 1 0 0
 
 #define ST7789VW_CMD_VSCRSADD   0x37 //Vertical scrolling start address
 #define ST7789VW_CMD_IDMOFF     0x38 //Idle mode off
 #define ST7789VW_CMD_IDMON      0x39 //Idle mode on
 
 #define ST7789VW_CMD_COLMOD     0x3A     //Interface pixel format
-#define ST7789VW_COLMOD_12bit 0x03    //  RGB444 (12bit)
-#define ST7789VW_COLMOD_16bit 0x05    //  RGB565 (16bit)
-#define ST7789VW_COLMOD_18bit 0x06    //  RGB666 (18bit)
+#define ST7789VW_COLMOD_12bit   0x03    //  RGB444 (12bit)
+#define ST7789VW_COLMOD_16bit   0x05    //  RGB565 (16bit)
+#define ST7789VW_COLMOD_18bit   0x06    //  RGB666 (18bit)
 
 #define ST7789VW_CMD_RAMWRC     0x3C     //Memory write continue
 #define ST7789VW_CMD_RAMRDC     0x3E     //Memory read continue

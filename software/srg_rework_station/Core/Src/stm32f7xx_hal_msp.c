@@ -362,7 +362,7 @@ void HAL_QSPI_MspInit(QSPI_HandleTypeDef* hqspi)
     /* QUADSPI Init */
     hdma_quadspi.Instance = DMA2_Stream7;
     hdma_quadspi.Init.Channel = DMA_CHANNEL_3;
-    hdma_quadspi.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_quadspi.Init.Direction = DMA_MEMORY_TO_PERIPH;
     hdma_quadspi.Init.PeriphInc = DMA_PINC_DISABLE;
     hdma_quadspi.Init.MemInc = DMA_MINC_ENABLE;
     hdma_quadspi.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
