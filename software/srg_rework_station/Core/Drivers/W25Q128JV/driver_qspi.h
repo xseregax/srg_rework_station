@@ -1,12 +1,6 @@
 /**
   ******************************************************************************
-  * @file    stm32746g_discovery_qspi.h
   * @author  MCD Application Team
-  * @brief   This file contains the common defines and functions prototypes for
-  *          the stm32746g_discovery_qspi.c driver.
-  ******************************************************************************
-  * @attention
-  *
   * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
@@ -39,52 +33,48 @@
 #include "stm32f7xx_hal.h"
 
 
-/* QSPI Error codes */
-#define QSPI_OK            ((uint8_t)0x00)
-#define QSPI_ERROR         ((uint8_t)0x01)
-#define QSPI_BUSY          ((uint8_t)0x02)
-#define QSPI_NOT_SUPPORTED ((uint8_t)0x04)
-#define QSPI_SUSPENDED     ((uint8_t)0x08)
+// Error codes
+#define FLASH_OK            ((uint8_t)0x00)
+#define FLASH_ERROR         ((uint8_t)0x01)
+#define FLASH_BUSY          ((uint8_t)0x02)
+#define FLASH_NOT_SUPPORTED ((uint8_t)0x04)
+#define FLASH_SUSPENDED     ((uint8_t)0x08)
 
-
-/* QSPI Info */
 typedef struct {
     uint32_t FlashSize;          /*!< Size of the flash */
     uint32_t EraseSectorSize;    /*!< Size of sectors for the erase operation */
     uint32_t EraseSectorsNumber; /*!< Number of sectors for the erase operation */
     uint32_t ProgPageSize;       /*!< Size of pages for the program operation */
     uint32_t ProgPagesNumber;    /*!< Number of pages for the program operation */
-} QSPI_Info;
+} FLASH_INFO_t;
 
 typedef struct {
     QSPI_HandleTypeDef *hqspi;
     DMA_HandleTypeDef *hdma_quadspi;
 
-    QSPI_Info flash_info;
-} QSPI_FLASH_t;
+    FLASH_INFO_t flash_info;
+} FLASH_t;
 
 
-uint8_t QSPI_Init(QSPI_HandleTypeDef *hqspi, DMA_HandleTypeDef *hdma_quadspi);
+uint8_t FLASH_Init(QSPI_HandleTypeDef *hqspi, DMA_HandleTypeDef *hdma_quadspi);
 
-uint8_t QSPI_ResetMemory(QSPI_HandleTypeDef *hqspi);
+uint8_t FLASH_ResetMemory(void);
 
-uint8_t QSPI_WriteEnable(QSPI_HandleTypeDef *hqspi);
+uint8_t FLASH_WriteEnable(void);
 
-uint8_t QSPI_AutoPollingMemReady(QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
+uint8_t FLASH_AutoPollingMemReady(uint32_t Timeout);
 
-uint8_t QSPI_Read(QSPI_HandleTypeDef *hqspi, uint8_t *pData, uint32_t ReadAddr, uint32_t Size);
+uint8_t FLASH_Read(uint8_t *pData, uint32_t ReadAddr, uint32_t Size);
 
-uint8_t QSPI_Write(QSPI_HandleTypeDef *hqspi, uint8_t *pData, uint32_t WriteAddr, uint32_t Size);
+uint8_t FLASH_Write(uint8_t *pData, uint32_t WriteAddr, uint32_t Size);
 
-uint8_t QSPI_Erase_Block(QSPI_HandleTypeDef *hqspi, uint32_t BlockAddress);
+uint8_t FLASH_Erase_Block(uint32_t BlockAddress);
 
-uint8_t QSPI_Erase_Chip(QSPI_HandleTypeDef *hqspi);
+uint8_t FLASH_Erase_Chip(void);
 
-uint8_t QSPI_GetStatus(QSPI_HandleTypeDef *hqspi);
+uint8_t FLASH_GetStatus(void);
 
-uint8_t QSPI_GetInfo(QSPI_HandleTypeDef *hqspi, QSPI_Info *pInfo);
+uint8_t FLASH_GetInfo(FLASH_INFO_t *pInfo);
 
-uint8_t QSPI_EnableMemoryMappedMode(QSPI_HandleTypeDef *hqspi);
+uint8_t FLASH_EnableMemoryMappedMode(void);
 
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

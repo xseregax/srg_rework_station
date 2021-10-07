@@ -1109,7 +1109,7 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
 
     // Init flash
-    QSPI_Init(&hqspi, &hdma_quadspi);
+    FLASH_Init(&hqspi, &hdma_quadspi);
 
     /*Lcd st7789vw driver initialization*/
     ST7789VW_Init(&hspi1,

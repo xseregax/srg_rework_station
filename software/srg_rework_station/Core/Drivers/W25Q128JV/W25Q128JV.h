@@ -51,10 +51,12 @@ const uint16_t data_qspi[]= {  0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF }
 
 // Identification Operations
 #define READ_UNIQUE_ID              0x4B
+#define READ_JEDEC_ID_CMD           0x9F
+
 #define READ_ID_CMD                 0x90
 #define DUAL_READ_ID_CMD            0x92
 #define QUAD_READ_ID_CMD            0x94
-#define READ_JEDEC_ID_CMD           0x9F
+
 
 // Read Operations
 #define READ_CMD                    0x03 //  only supported in Standard SPI mode
@@ -138,11 +140,6 @@ const uint16_t data_qspi[]= {  0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF }
 #define W25Q128JV_FSR3_DRV0     ((uint8_t)0x20)     // output driver strength bit 0
 #define W25Q128JV_FSR3_DRV1     ((uint8_t)0x40)     // output driver strength bit 1
 #define W25Q128JV_FSR3_RST      ((uint8_t)0x80)     // reset function
-
-
-/*****************************************************************************************************/
-
-
 
 
 
