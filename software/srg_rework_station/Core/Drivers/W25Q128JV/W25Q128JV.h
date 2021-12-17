@@ -8,25 +8,6 @@ DUAL/QUAD SPI
 
 */
 
-/*
-const uint16_t data_qspi[] __attribute__((section(".data_qspi")));
-const uint16_t data_qspi[]= {  0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF }
-
-//    // Copy picture from QSPI to RAM
-//    memset(buf, 0, 100*sizeof(uint16_t));
-//    memcpy(buf, (void*) &data_qspi, 100*sizeof(uint16_t));
-
- QSPI clock = AHB clock / (ClockPrescaler + 1)
- ClockPrescaler set to 1, so QSPI clock = 216MHz / (1+1) = 108MHz
- ClockPrescaler set to 2, so QSPI clock = 216MHz / (2+1) = 72MHz
-
- /CS Active Hold Time relative to CLK tCHSH 3 ns
- ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE or QSPI_CS_HIGH_TIME_2_CYCLE ???
-
- Sample shifting half cycle disabled – may be needed with bad PCB design
- SampleShifting = QSPI_SAMPLE_SHIFTING_NONE or QSPI_SAMPLE_SHIFTING_HALFCYCLE ???
-
- */
 
 #define W25Q128JV_FLASH_SIZE        0x1000000 // 128 MBits => 16MBytes
 #define W25Q128JV_FLASH_SIZE_BIT    23 // 128 MBits => 16MBytes => 16777216bytes => 2 ^(23 + 1), so FlashSize = 23

@@ -76,6 +76,12 @@ uint8_t FLASH_Init(QSPI_HandleTypeDef *hqspi, DMA_HandleTypeDef *hdma_quadspi) {
     FLASH_GetInfo(&flash.flash_info);
 
     //TODO need check correct flash info
+    // read JEDECID 0xef,0x40,0x18  3byte
+    // Winbond Serial Flash: EFh
+    // Device ID: 17h
+    // W25Q128JV-IQ/JQ: 4018h
+    // W25Q128JV-IM*/JM*: 7018h
+    // read Read Unique ID 4+8byte
 
     /* Configure the QSPI in memory-mapped mode */
     FLASH_EnableMemoryMappedMode();

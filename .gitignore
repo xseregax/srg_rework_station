@@ -67,3 +67,5 @@ cmake-build-relwithdebinfo/
 
 lv_sim_eclipse_sdl
 lvgl_edgeline
+
+info.txt
